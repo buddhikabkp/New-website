@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal | Ceylon Journey</title>
+  <meta name="description" content="Administrative management dashboard for Ceylon Journey attractions.">
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="admin-page-wrapper">
+
+  <!-- ========================================================================
+       ADMIN TOP HEADER BAR (Matches Screenshot 4)
+       ======================================================================== -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <a href="index.html" class="nav-back-link">
+        &lt; Back
+      </a>
+      <h1 class="admin-page-title">Admin Portal</h1>
+    </div>
+
+    <div class="admin-header-right">
+      <span class="logged-in-pill" id="admin-user-status">Logged in as admin</span>
+      <button type="button" class="sign-out-btn" id="admin-signout-btn" onclick="handleAdminLogout()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       ADMIN MAIN CONTENT (Matches Screenshot 4)
+       ======================================================================== -->
+  <main class="admin-main-container">
+
+    <!-- 4 Dashboard Metric Cards -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="kpi-total-attractions">12</span>
+        <span class="admin-stat-desc">Total Attractions</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="kpi-nature-count">4</span>
+        <span class="admin-stat-desc">Nature & Outdoor</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="kpi-heritage-count">3</span>
+        <span class="admin-stat-desc">Heritage Sites</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-number" id="kpi-free-count">3</span>
+        <span class="admin-stat-desc">Free Admission</span>
+      </div>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="admin-actions-bar">
+      <!-- Search Box -->
+      <div class="search-input-wrapper admin-search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="admin-search-input" class="search-input" placeholder="Search attractions...">
+      </div>
+
+      <!-- Category Filter Dropdown -->
+      <div class="admin-cat-filter-wrap">
+        <select id="admin-category-select" aria-label="Filter category">
+          <option value="all">All categories</option>
+          <option value="Religious">Religious</option>
+          <option value="Heritage">Heritage</option>
+          <option value="Nature">Nature</option>
+          <option value="Cultural">Cultural</option>
+          <option value="Sightseeing">Sightseeing</option>
+        </select>
+      </div>
+
+      <!-- + Add Attraction Primary Button -->
+      <button type="button" class="btn-add-attraction" onclick="openAddModal()">
+        + Add Attraction
+      </button>
+    </div>
+
+    <!-- Attractions Table Card -->
+    <div class="admin-table-card">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Distance</th>
+            <th>Ticket</th>
+            <th>Rating</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="admin-table-tbody">
+          <!-- Populated dynamically by admin.js -->
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL 1: ADD / EDIT ATTRACTION
+       ======================================================================== -->
+  <div class="modal-backdrop" id="attraction-crud-modal" onclick="if(event.target === this) closeCrudModal()">
+    <div class="modal-card" style="max-width: 820px;" role="dialog" aria-modal="true" aria-labelledby="attraction-modal-title">
+      <div class="modal-header">
+        <h3 class="modal-title" id="attraction-modal-title">Add New Attraction</h3>
+        <button type="button" class="btn-modal-close" onclick="closeCrudModal()">&times;</button>
+      </div>
+
+      <form id="attraction-form" onsubmit="handleAttractionFormSubmit(event)">
+        <div class="modal-body">
+          <div id="form-error-alert" class="form-error-msg" style="margin-bottom: 1rem; padding: 0.75rem; background: #fdf0ed; border: 1px solid #f5b7b1; border-radius: 8px;"></div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-name">Attraction Name *</label>
+              <input type="text" id="field-name" class="form-control" placeholder="e.g. Temple of the Tooth Relic" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-category">Category *</label>
+              <select id="field-category" class="form-control" required>
+                <option value="Religious">Religious</option>
+                <option value="Heritage">Heritage</option>
+                <option value="Nature">Nature</option>
+                <option value="Cultural">Cultural</option>
+                <option value="Sightseeing">Sightseeing</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-distance">Distance from Haloluwa (km ≤ 25.0) *</label>
+              <input type="number" id="field-distance" class="form-control" step="0.1" min="0.1" max="25.0" placeholder="e.g. 5.2" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-price-display">Ticket Price Display Text</label>
+              <input type="text" id="field-price-display" class="form-control" placeholder="e.g. LKR 1,500 or Free">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-price-local">Local Price (LKR)</label>
+              <input type="number" id="field-price-local" class="form-control" min="0" step="10" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-price-foreign">Foreign Price (LKR)</label>
+              <input type="number" id="field-price-foreign" class="form-control" min="0" step="10" placeholder="0">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-rating">Rating (1.0 - 5.0)</label>
+              <input type="number" id="field-rating" class="form-control" step="0.1" min="1.0" max="5.0" value="4.5">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-duration">Est. Duration (mins)</label>
+              <input type="number" id="field-duration" class="form-control" min="15" step="15" value="60">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-latitude">Latitude Coordinate *</label>
+              <input type="number" id="field-latitude" class="form-control" step="0.0000001" placeholder="7.2936" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-longitude">Longitude Coordinate *</label>
+              <input type="number" id="field-longitude" class="form-control" step="0.0000001" placeholder="80.6413" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-opening">Opening Time</label>
+              <input type="text" id="field-opening" class="form-control" placeholder="08:00 AM - 05:00 PM">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-image">Image URL</label>
+              <input type="url" id="field-image" class="form-control" placeholder="https://images.unsplash.com/...">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="field-desc">Short Description *</label>
+            <textarea id="field-desc" class="form-control" rows="2" placeholder="Brief summary of the site..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="field-history">Historical Context & Significance</label>
+            <textarea id="field-history" class="form-control" rows="2" placeholder="Historical background and monarch details..."></textarea>
+          </div>
+
+          <!-- Facilities & Accessibility -->
+          <div style="background: #faf7f2; border: 1px solid #ebdccb; border-radius: 10px; padding: 1rem; margin-bottom: 1.1rem;">
+            <label class="form-label" style="margin-bottom: 0.6rem;">Facilities & Accessibility</label>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;">
+              <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                <input type="checkbox" id="field-wheelchair"> Wheelchair Access
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                <input type="checkbox" id="field-parking" checked> Vehicle Parking
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                <input type="checkbox" id="field-restrooms" checked> Restrooms
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                <input type="checkbox" id="field-elderly" checked> Elderly Friendly
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.35rem;">
+                Difficulty: 
+                <select id="field-difficulty" class="form-control" style="width: auto; padding: 0.2rem 0.5rem; font-size: 0.82rem;">
+                  <option value="Easy">Easy</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="Challenging">Challenging</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-dress">Dress Code</label>
+              <input type="text" id="field-dress" class="form-control" placeholder="e.g. Modest attire covering shoulders and knees">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-photo">Photography Rules</label>
+              <input type="text" id="field-photo" class="form-control" placeholder="e.g. Allowed in outer courtyard">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="field-tips">Cultural Tips</label>
+              <input type="text" id="field-tips" class="form-control" placeholder="e.g. Walk clockwise around shrine">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="field-emergency">Emergency Contact</label>
+              <input type="text" id="field-emergency" class="form-control" placeholder="Tourist Police Kandy: 1912">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream);" onclick="closeCrudModal()">Cancel</button>
+          <button type="submit" class="btn-primary-pill" style="padding: 0.65rem 1.4rem;">Save Attraction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: DELETE CONFIRMATION
+       ======================================================================== -->
+  <div class="modal-backdrop" id="admin-delete-modal" onclick="if(event.target === this) closeDeleteModal()">
+    <div class="modal-card" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+      <div class="modal-header">
+        <h3 class="modal-title" id="delete-dialog-title" style="color: #c0392b;">Delete Attraction</h3>
+        <button type="button" class="btn-modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.95rem; color: #473e34; margin-bottom: 0.5rem;">
+          Are you sure you want to permanently delete:
+        </p>
+        <p style="font-weight: 700; font-family: var(--font-serif); font-size: 1.1rem; color: #221c16; margin-bottom: 1rem;" id="delete-attraction-name"></p>
+        <p style="font-size: 0.82rem; color: #7d7265;">
+          This action will immediately update the database and cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream);" onclick="closeDeleteModal()">Cancel</button>
+        <button type="button" class="btn-primary-pill" style="background: #c0392b; padding: 0.65rem 1.4rem;" onclick="confirmDeleteAttraction()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 3: ADMIN LOGIN (If unauthenticated)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="admin-login-modal">
+    <div class="modal-card" style="max-width: 420px;" role="dialog" aria-modal="true" aria-labelledby="login-dialog-title">
+      <div class="modal-header">
+        <h3 class="modal-title" id="login-dialog-title">Administrator Login</h3>
+        <a href="index.html" class="btn-modal-close" style="font-size: 1.1rem; text-decoration: none;">&times;</a>
+      </div>
+      <form onsubmit="handleAdminLogin(event)">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: #7d7265; margin-bottom: 1.25rem;">
+            Please enter your administrative credentials to manage attractions.
+          </p>
+
+          <div id="login-error-msg" class="form-error-msg" style="margin-bottom: 1rem; padding: 0.6rem; background: #fdf0ed; border: 1px solid #f5b7b1; border-radius: 6px;"></div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-username">Username</label>
+            <input type="text" id="login-username" class="form-control" value="admin" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" value="Admin@Ceylon2026" required autocomplete="current-password">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="index.html" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream); text-decoration: none; padding: 0.65rem 1.2rem;">Back to Home</a>
+          <button type="submit" class="btn-primary-pill" style="padding: 0.65rem 1.4rem;">Log In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Application Script -->
+  <script src="js/admin.js"></script>
+</body>
+</html>
