@@ -42,19 +42,6 @@ Developed for **BIT Semester Project (ITE2953)** adhering strictly to the **IEEE
      - Permanent Delete confirmation modal.
 
 ---
-## 🗄️ Database Setup
-
-The database schema and seed data are located in the `database/` folder:
-- `database/schema.sql` - Tables for `admin_users`, `attractions`, and `itineraries`.
-- `database/seed.sql` - Pre-seeded with 12 verified attractions around Haloluwa, Kandy matching the project screenshots.
-
-To re-apply manually via command line:
-```powershell
-Get-Content database\schema.sql | & "C:\xampp\mysql\bin\mysql.exe" -u root
-Get-Content database\seed.sql | & "C:\xampp\mysql\bin\mysql.exe" -u root
-```
-
----
 
 ## 🔐 Admin Credentials
 
