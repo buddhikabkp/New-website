@@ -13,6 +13,16 @@ const ADMIN_STATE = {
   },
   editingId: null,
   deleteTargetId: null,
+  adminUsers: [],
+  deleteAdminId: null,
+  editingAdminId: null,
+  currentUser: (() => {
+    try {
+      return JSON.parse(localStorage.getItem('ceylon_admin_user') || 'null');
+    } catch (e) {
+      return null;
+    }
+  })(),
   token: localStorage.getItem('ceylon_admin_token') || null
 };
 
@@ -51,10 +61,22 @@ function updateAuthHeader(isLoggedIn) {
   const badge = document.getElementById('admin-user-status');
   const signoutBtn = document.getElementById('admin-signout-btn');
   if (badge) {
-    badge.textContent = isLoggedIn ? 'Logged in as admin' : 'Guest';
+    if (isLoggedIn) {
+      const u = ADMIN_STATE.currentUser;
+      const displayName = u ? (u.username || 'admin') : 'admin';
+      badge.innerHTML = `
+        <span class="status-indicator-dot"></span>
+        <span class="status-text">Logged in as ${escapeHtml(displayName)}</span>
+      `;
+    } else {
+      badge.innerHTML = `
+        <span class="status-indicator-dot" style="background: #999;"></span>
+        <span class="status-text">Guest</span>
+      `;
+    }
   }
   if (signoutBtn) {
-    signoutBtn.style.display = isLoggedIn ? 'inline' : 'none';
+    signoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
   }
 }
 
@@ -74,7 +96,9 @@ async function handleAdminLogin(e) {
     const data = await res.json();
     if (res.ok && data.success) {
       ADMIN_STATE.token = data.token || 'demo_token';
+      ADMIN_STATE.currentUser = data.user || { id: 1, username, full_name: username, role: 'admin' };
       localStorage.setItem('ceylon_admin_token', ADMIN_STATE.token);
+      localStorage.setItem('ceylon_admin_user', JSON.stringify(ADMIN_STATE.currentUser));
       document.getElementById('admin-login-modal').classList.remove('active');
       updateAuthHeader(true);
       await loadAdminAttractions();
@@ -82,7 +106,9 @@ async function handleAdminLogin(e) {
       // Allow demo bypass for admin / Admin@Ceylon2026
       if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
         ADMIN_STATE.token = 'local_admin_token';
+        ADMIN_STATE.currentUser = { id: 1, username: 'admin', full_name: 'System Administrator', role: 'admin' };
         localStorage.setItem('ceylon_admin_token', ADMIN_STATE.token);
+        localStorage.setItem('ceylon_admin_user', JSON.stringify(ADMIN_STATE.currentUser));
         document.getElementById('admin-login-modal').classList.remove('active');
         updateAuthHeader(true);
         await loadAdminAttractions();
@@ -95,7 +121,9 @@ async function handleAdminLogin(e) {
     // Fallback local check
     if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
       ADMIN_STATE.token = 'local_admin_token';
+      ADMIN_STATE.currentUser = { id: 1, username: 'admin', full_name: 'System Administrator', role: 'admin' };
       localStorage.setItem('ceylon_admin_token', ADMIN_STATE.token);
+      localStorage.setItem('ceylon_admin_user', JSON.stringify(ADMIN_STATE.currentUser));
       document.getElementById('admin-login-modal').classList.remove('active');
       updateAuthHeader(true);
       await loadAdminAttractions();
@@ -108,7 +136,9 @@ async function handleAdminLogin(e) {
 
 function handleAdminLogout() {
   localStorage.removeItem('ceylon_admin_token');
+  localStorage.removeItem('ceylon_admin_user');
   ADMIN_STATE.token = null;
+  ADMIN_STATE.currentUser = null;
   updateAuthHeader(false);
   window.location.replace('index.html');
 }
@@ -259,7 +289,11 @@ function openEditModal(attractionId) {
 
   // Populate form fields
   document.getElementById('field-name').value = att.name || '';
-  document.getElementById('field-category').value = att.category || 'Religious';
+  const catField = document.getElementById('field-category');
+  if (catField) {
+    catField.value = att.category || 'Religious';
+    if (catField._syncCustomSelect) catField._syncCustomSelect();
+  }
   document.getElementById('field-distance').value = att.distance_km || '';
   document.getElementById('field-price-display').value = att.price_display || '';
   document.getElementById('field-price-local').value = att.price_local || 0;
@@ -282,7 +316,11 @@ function openEditModal(attractionId) {
   document.getElementById('field-parking').checked = Boolean(att.accessibility_parking);
   document.getElementById('field-restrooms').checked = Boolean(att.accessibility_restrooms);
   document.getElementById('field-elderly').checked = Boolean(att.elderly_friendly);
-  document.getElementById('field-difficulty').value = att.walking_difficulty || 'Easy';
+  const diffField = document.getElementById('field-difficulty');
+  if (diffField) {
+    diffField.value = att.walking_difficulty || 'Easy';
+    if (diffField._syncCustomSelect) diffField._syncCustomSelect();
+  }
 
   // Setup image preview if existing
   const fileInput = document.getElementById('field-image-file');
@@ -322,9 +360,15 @@ function handleClearForm() {
   });
 
   const catEl = document.getElementById('field-category');
-  if (catEl) catEl.value = 'Religious';
+  if (catEl) {
+    catEl.value = 'Religious';
+    if (catEl._syncCustomSelect) catEl._syncCustomSelect();
+  }
   const diffEl = document.getElementById('field-difficulty');
-  if (diffEl) diffEl.value = 'Easy';
+  if (diffEl) {
+    diffEl.value = 'Easy';
+    if (diffEl._syncCustomSelect) diffEl._syncCustomSelect();
+  }
 
   ['field-wheelchair', 'field-parking', 'field-restrooms', 'field-elderly'].forEach(id => {
     const el = document.getElementById(id);
@@ -597,4 +641,521 @@ function getAdminFallbackAttractions() {
     { id: 11, name: 'Hanthana Mountain Range Trail', category: 'Nature', distance_km: 6.7, price_display: 'LKR 500', price_local: 500, rating: 4.6, latitude: 7.2550, longitude: 80.6280, description: 'Popular trekking range with seven mountain peaks rising above 1,200m, offering panoramic tea valley vistas, montane grasslands, and diverse avian life.', image_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800' },
     { id: 12, name: 'Dunumadalawa Forest Sanctuary', category: 'Nature', distance_km: 5.8, price_display: 'LKR 400', price_local: 400, rating: 4.5, latitude: 7.2810, longitude: 80.6470, description: 'A pristine catchment forest and reservoir area nestled between Kandy and Hantana, rich in endemic bird species, quiet trails, and rare butterflies.', image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800' }
   ];
+}
+
+// ==========================================================================
+// ADMINISTRATOR MANAGEMENT CONTROLLER
+// ==========================================================================
+async function openAdminUsersModal() {
+  const modal = document.getElementById('admin-users-modal');
+  if (!modal) return;
+
+  resetAdminForm();
+  modal.classList.add('active');
+  await loadAdminUsers();
+}
+
+function closeAdminUsersModal() {
+  const modal = document.getElementById('admin-users-modal');
+  if (modal) modal.classList.remove('active');
+  resetAdminForm();
+}
+
+async function loadAdminUsers() {
+  const tbody = document.getElementById('admin-users-tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="4" style="text-align: center; padding: 2rem; color: #7d7265;">
+        Loading administrators...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const res = await fetch('/api/admins');
+    if (res.ok) {
+      const data = await res.json();
+      ADMIN_STATE.adminUsers = data.data || [];
+    } else {
+      throw new Error('Failed to load administrators');
+    }
+  } catch (err) {
+    console.warn('Could not fetch /api/admins from server, using local fallback:', err);
+    if (!ADMIN_STATE.adminUsers || ADMIN_STATE.adminUsers.length === 0) {
+      ADMIN_STATE.adminUsers = [
+        { id: 1, username: 'admin', full_name: 'System Administrator', role: 'admin', created_at: new Date().toISOString() }
+      ];
+    }
+  }
+
+  renderAdminUsersTable();
+}
+
+function renderAdminUsersTable() {
+  const tbody = document.getElementById('admin-users-tbody');
+  const countBadge = document.getElementById('admins-count-badge');
+  if (!tbody) return;
+
+  const users = ADMIN_STATE.adminUsers || [];
+  if (countBadge) {
+    countBadge.textContent = users.length === 1 ? '1 Admin' : `${users.length} Admins`;
+  }
+
+  if (users.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 2rem; color: #7d7265;">
+          No administrators found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const currentUsername = ADMIN_STATE.currentUser ? (ADMIN_STATE.currentUser.username || '').toLowerCase() : 'admin';
+
+  tbody.innerHTML = users.map(user => {
+    const isPrimary = (user.id === 1 || (user.username && user.username.toLowerCase() === 'admin'));
+    const isCurrent = (user.username && user.username.toLowerCase() === currentUsername);
+
+    const safeFullName = escapeHtml(user.full_name || user.username || 'Admin');
+    const safeUsername = escapeHtml(user.username || '');
+    const safeRole = escapeHtml(user.role === 'editor' ? 'Editor' : 'Administrator');
+    const roleBadgeBg = user.role === 'editor' ? '#e8f3f8' : '#eaf4ed';
+    const roleBadgeColor = user.role === 'editor' ? '#216f91' : '#2c6f37';
+
+    let actionHtml = '';
+    if (isPrimary) {
+      actionHtml = `
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.45rem;">
+          <button type="button" class="btn-edit-admin-row" onclick="startEditAdmin(${user.id})" title="Edit Primary Administrator details">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit
+          </button>
+          <span class="admin-user-pill-primary" title="Primary system account protected from deletion">Primary</span>
+        </div>
+      `;
+    } else {
+      actionHtml = `
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.45rem;">
+          <button type="button" class="btn-edit-admin-row" onclick="startEditAdmin(${user.id})" title="Edit administrator details">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit
+          </button>
+          <button type="button" class="btn-delete-admin-row" onclick="openDeleteAdminConfirm(${user.id}, '${safeFullName.replace(/'/g, "\\'")}')" title="Delete administrator">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Delete
+          </button>
+        </div>
+      `;
+    }
+
+    return `
+      <tr>
+        <td>
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #ece4d8; color: #473e34; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+              ${safeFullName.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight: 600; color: #221c16; display: flex; align-items: center;">
+                ${safeFullName}
+                ${isCurrent ? '<span class="admin-user-pill-you">You</span>' : ''}
+              </div>
+              <div style="font-size: 0.75rem; color: #8c827a;">
+                Added ${user.created_at ? new Date(user.created_at).toLocaleDateString() : 'System'}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td style="font-family: monospace; color: #5a4f43;">@${safeUsername}</td>
+        <td>
+          <span style="display: inline-block; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: ${roleBadgeBg}; color: ${roleBadgeColor};">
+            ${safeRole}
+          </span>
+        </td>
+        <td style="text-align: right;">
+          ${actionHtml}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function startEditAdmin(adminId) {
+  const user = (ADMIN_STATE.adminUsers || []).find(u => u.id === adminId);
+  if (!user) return;
+
+  ADMIN_STATE.editingAdminId = adminId;
+
+  const idInput = document.getElementById('edit-admin-id');
+  if (idInput) idInput.value = user.id;
+
+  const isPrimary = (user.id === 1 || (user.username && user.username.toLowerCase() === 'admin'));
+
+  const heading = document.getElementById('admin-form-heading');
+  if (heading) {
+    heading.textContent = `✏️ Edit Administrator (@${user.username})`;
+  }
+
+  const modeBadge = document.getElementById('admin-form-mode-badge');
+  if (modeBadge) modeBadge.style.display = 'inline-block';
+
+  const fullNameInput = document.getElementById('new-admin-fullname');
+  if (fullNameInput) fullNameInput.value = user.full_name || '';
+
+  const usernameInput = document.getElementById('new-admin-username');
+  if (usernameInput) {
+    usernameInput.value = user.username || '';
+    if (isPrimary) {
+      usernameInput.disabled = true;
+      usernameInput.title = 'Primary administrator username cannot be changed';
+    } else {
+      usernameInput.disabled = false;
+      usernameInput.title = '';
+    }
+  }
+
+  const roleSelect = document.getElementById('new-admin-role');
+  if (roleSelect) {
+    roleSelect.value = user.role || 'admin';
+    if (isPrimary) {
+      roleSelect.disabled = true;
+      roleSelect.title = 'Primary administrator must retain Administrator role';
+    } else {
+      roleSelect.disabled = false;
+      roleSelect.title = '';
+    }
+    if (roleSelect._syncCustomSelect) roleSelect._syncCustomSelect();
+  }
+
+  const passwordLabel = document.getElementById('lbl-admin-password');
+  if (passwordLabel) passwordLabel.textContent = 'Password (leave blank to keep current)';
+
+  const passwordInput = document.getElementById('new-admin-password');
+  if (passwordInput) {
+    passwordInput.required = false;
+    passwordInput.value = '';
+    passwordInput.placeholder = 'Leave blank to keep unchanged';
+  }
+
+  const hint = document.getElementById('password-edit-hint');
+  if (hint) hint.style.display = 'block';
+
+  const submitBtn = document.getElementById('btn-submit-admin');
+  if (submitBtn) {
+    submitBtn.textContent = 'Update Admin';
+    submitBtn.disabled = false;
+  }
+
+  const cancelBtn = document.getElementById('btn-cancel-admin-edit');
+  if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+
+  const formDeleteBtn = document.getElementById('btn-admin-form-delete');
+  if (formDeleteBtn) {
+    formDeleteBtn.style.display = isPrimary ? 'none' : 'inline-flex';
+  }
+
+  const alertEl = document.getElementById('add-admin-alert');
+  if (alertEl) {
+    alertEl.style.display = 'none';
+    alertEl.textContent = '';
+  }
+
+  // Smooth scroll up to form
+  const modalBody = document.querySelector('#admin-users-modal .modal-body');
+  if (modalBody) {
+    modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (fullNameInput) fullNameInput.focus();
+}
+
+function resetAdminForm() {
+  ADMIN_STATE.editingAdminId = null;
+
+  const form = document.getElementById('add-admin-form');
+  if (form) form.reset();
+
+  const idInput = document.getElementById('edit-admin-id');
+  if (idInput) idInput.value = '';
+
+  const heading = document.getElementById('admin-form-heading');
+  if (heading) heading.textContent = '+ Add New Administrator';
+
+  const modeBadge = document.getElementById('admin-form-mode-badge');
+  if (modeBadge) modeBadge.style.display = 'none';
+
+  const usernameInput = document.getElementById('new-admin-username');
+  if (usernameInput) {
+    usernameInput.disabled = false;
+    usernameInput.placeholder = 'e.g. ruwan';
+    usernameInput.title = '';
+  }
+
+  const roleSelect = document.getElementById('new-admin-role');
+  if (roleSelect) {
+    roleSelect.disabled = false;
+    roleSelect.value = 'admin';
+    roleSelect.title = '';
+    if (roleSelect._syncCustomSelect) roleSelect._syncCustomSelect();
+  }
+
+  const passwordLabel = document.getElementById('lbl-admin-password');
+  if (passwordLabel) passwordLabel.textContent = 'Password (min 6 chars) *';
+
+  const passwordInput = document.getElementById('new-admin-password');
+  if (passwordInput) {
+    passwordInput.required = true;
+    passwordInput.placeholder = '••••••••';
+    passwordInput.value = '';
+  }
+
+  const hint = document.getElementById('password-edit-hint');
+  if (hint) hint.style.display = 'none';
+
+  const submitBtn = document.getElementById('btn-submit-admin');
+  if (submitBtn) {
+    submitBtn.textContent = 'Create Admin Account';
+    submitBtn.disabled = false;
+  }
+
+  const cancelBtn = document.getElementById('btn-cancel-admin-edit');
+  if (cancelBtn) cancelBtn.style.display = 'none';
+
+  const formDeleteBtn = document.getElementById('btn-admin-form-delete');
+  if (formDeleteBtn) formDeleteBtn.style.display = 'none';
+
+  const alertEl = document.getElementById('add-admin-alert');
+  if (alertEl) {
+    alertEl.style.display = 'none';
+    alertEl.textContent = '';
+  }
+}
+
+function handleFormDeleteAdminClick() {
+  if (!ADMIN_STATE.editingAdminId) return;
+  const user = (ADMIN_STATE.adminUsers || []).find(u => u.id === ADMIN_STATE.editingAdminId);
+  if (!user) return;
+  if (user.id === 1 || (user.username && user.username.toLowerCase() === 'admin')) {
+    alert('The primary system administrator account cannot be deleted.');
+    return;
+  }
+  openDeleteAdminConfirm(user.id, user.full_name || user.username);
+}
+
+async function handleAdminFormSubmit(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById('btn-submit-admin');
+
+  const fullNameInput = document.getElementById('new-admin-fullname');
+  const usernameInput = document.getElementById('new-admin-username');
+  const passwordInput = document.getElementById('new-admin-password');
+  const roleSelect = document.getElementById('new-admin-role');
+
+  const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+  const username = usernameInput ? usernameInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value : '';
+  const role = roleSelect ? roleSelect.value : 'admin';
+
+  const isEdit = Boolean(ADMIN_STATE.editingAdminId);
+
+  if (!fullName || !username) {
+    showAdminAlert('Please fill in both Full Name and Username.', 'error');
+    return;
+  }
+
+  if (username.length < 3) {
+    showAdminAlert('Username must be at least 3 characters long.', 'error');
+    return;
+  }
+
+  if (/\s/.test(username)) {
+    showAdminAlert('Username cannot contain spaces.', 'error');
+    return;
+  }
+
+  if (!isEdit && (!password || password.length < 6)) {
+    showAdminAlert('Password is required and must be at least 6 characters long.', 'error');
+    return;
+  }
+
+  if (isEdit && password && password.length < 6) {
+    showAdminAlert('New password must be at least 6 characters long if provided.', 'error');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = isEdit ? 'Updating...' : 'Creating...';
+  }
+
+  try {
+    const url = isEdit ? `/api/admins/${ADMIN_STATE.editingAdminId}` : '/api/admins';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const payload = {
+      full_name: fullName,
+      username,
+      role
+    };
+    if (password) {
+      payload.password = password;
+    }
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      showAdminAlert(
+        isEdit ? `Administrator '${username}' updated successfully!` : `Admin account '${username}' created successfully!`,
+        'success'
+      );
+
+      // If updating the currently logged-in account, refresh current user and header
+      if (ADMIN_STATE.currentUser && (
+        ADMIN_STATE.currentUser.id === (data.user && data.user.id) ||
+        (ADMIN_STATE.currentUser.username && ADMIN_STATE.currentUser.username.toLowerCase() === username.toLowerCase())
+      )) {
+        ADMIN_STATE.currentUser = { ...ADMIN_STATE.currentUser, ...data.user };
+        localStorage.setItem('ceylon_admin_user', JSON.stringify(ADMIN_STATE.currentUser));
+        updateAuthHeader(true);
+      }
+
+      resetAdminForm();
+      await loadAdminUsers();
+    } else {
+      showAdminAlert(data.message || `Failed to ${isEdit ? 'update' : 'create'} administrator account.`, 'error');
+    }
+  } catch (err) {
+    // Local fallback for offline
+    if (isEdit) {
+      const idx = ADMIN_STATE.adminUsers.findIndex(u => u.id === ADMIN_STATE.editingAdminId);
+      if (idx > -1) {
+        ADMIN_STATE.adminUsers[idx] = {
+          ...ADMIN_STATE.adminUsers[idx],
+          full_name: fullName,
+          username: username,
+          role: role
+        };
+        showAdminAlert(`Administrator '${username}' updated successfully (offline mode)!`, 'success');
+        resetAdminForm();
+        renderAdminUsersTable();
+      }
+    } else {
+      const exists = ADMIN_STATE.adminUsers.some(u => u.username.toLowerCase() === username.toLowerCase());
+      if (exists) {
+        showAdminAlert(`Username '${username}' is already taken.`, 'error');
+      } else {
+        const newAdmin = {
+          id: Date.now(),
+          full_name: fullName,
+          username: username,
+          role: role,
+          created_at: new Date().toISOString()
+        };
+        ADMIN_STATE.adminUsers.push(newAdmin);
+        showAdminAlert(`Admin account '${username}' created successfully (offline mode)!`, 'success');
+        resetAdminForm();
+        renderAdminUsersTable();
+      }
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = isEdit ? 'Update Admin' : 'Create Admin Account';
+    }
+  }
+}
+
+function showAdminAlert(msg, type = 'error') {
+  const alertEl = document.getElementById('add-admin-alert');
+  if (!alertEl) return;
+
+  alertEl.textContent = msg;
+  alertEl.style.display = 'block';
+  if (type === 'success') {
+    alertEl.style.background = '#eaf4ed';
+    alertEl.style.border = '1px solid #c2e2c8';
+    alertEl.style.color = '#2c6f37';
+  } else {
+    alertEl.style.background = '#fdf0ed';
+    alertEl.style.border = '1px solid #f5b7b1';
+    alertEl.style.color = '#c0392b';
+  }
+}
+
+function openDeleteAdminConfirm(adminId, adminName) {
+  ADMIN_STATE.deleteAdminId = adminId;
+  const nameEl = document.getElementById('delete-admin-target-name');
+  if (nameEl) nameEl.textContent = adminName;
+  const modal = document.getElementById('delete-admin-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeDeleteAdminModal() {
+  const modal = document.getElementById('delete-admin-modal');
+  if (modal) modal.classList.remove('active');
+  ADMIN_STATE.deleteAdminId = null;
+}
+
+async function confirmDeleteAdminUser() {
+  if (!ADMIN_STATE.deleteAdminId) return;
+
+  try {
+    const res = await fetch(`/api/admins/${ADMIN_STATE.deleteAdminId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${ADMIN_STATE.token}`
+      }
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (ADMIN_STATE.editingAdminId === ADMIN_STATE.deleteAdminId) {
+        resetAdminForm();
+      }
+      closeDeleteAdminModal();
+      await loadAdminUsers();
+    } else {
+      alert(data.message || 'Failed to delete administrator account.');
+      closeDeleteAdminModal();
+    }
+  } catch (err) {
+    // Offline fallback
+    if (ADMIN_STATE.editingAdminId === ADMIN_STATE.deleteAdminId) {
+      resetAdminForm();
+    }
+    ADMIN_STATE.adminUsers = ADMIN_STATE.adminUsers.filter(u => u.id !== ADMIN_STATE.deleteAdminId);
+    closeDeleteAdminModal();
+    renderAdminUsersTable();
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

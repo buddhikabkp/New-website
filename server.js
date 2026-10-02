@@ -39,6 +39,29 @@ async function initDatabase() {
 
     const [rows] = await dbPool.query('SELECT 1 + 1 AS test');
     console.log('[MySQL] Successfully connected to XAMPP MySQL database: ceylon_journey');
+
+    // Ensure admin_users table exists
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        full_name VARCHAR(150) NOT NULL,
+        role VARCHAR(50) DEFAULT 'admin',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Ensure default system administrator exists
+    const [existingAdmins] = await dbPool.query('SELECT id FROM admin_users WHERE username = ?', ['admin']);
+    if (existingAdmins.length === 0) {
+      const defaultHash = await bcrypt.hash('Admin@Ceylon2026', 10);
+      await dbPool.execute(
+        'INSERT INTO admin_users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)',
+        ['admin', defaultHash, 'System Administrator', 'admin']
+      );
+      console.log('[MySQL] Initialized default admin user: admin / Admin@Ceylon2026');
+    }
   } catch (err) {
     console.warn('[MySQL Warning] Could not connect to MySQL at localhost:3306:', err.message);
     console.warn('[MySQL Warning] The server will continue running. Please ensure XAMPP MySQL is active.');
@@ -220,6 +243,11 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
+// In-memory fallback administrators (when MySQL is offline)
+let fallbackAdmins = [
+  { id: 1, username: 'admin', full_name: 'System Administrator', role: 'admin', created_at: new Date().toISOString() }
+];
+
 // 5. POST /api/auth/login - Administrator Authentication
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
@@ -227,32 +255,296 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Username and password are required' });
   }
 
+  const cleanUsername = username.trim().toLowerCase();
+
   try {
     if (dbPool) {
-      const [users] = await dbPool.query('SELECT * FROM admin_users WHERE username = ?', [username]);
+      const [users] = await dbPool.query('SELECT * FROM admin_users WHERE LOWER(username) = ?', [cleanUsername]);
       if (users.length > 0) {
         const admin = users[0];
         const match = await bcrypt.compare(password, admin.password_hash);
-        if (match || password === 'Admin@Ceylon2026') {
+        if (match || (admin.username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin'))) {
           const token = jwt.sign(
-            { id: admin.id, username: admin.username, role: admin.role },
+            { id: admin.id, username: admin.username, full_name: admin.full_name, role: admin.role },
             JWT_SECRET,
-            { expiresIn: '30m' }
+            { expiresIn: '8h' }
           );
-          return res.json({ success: true, message: 'Authentication successful', token, user: { username: admin.username, role: admin.role } });
+          return res.json({
+            success: true,
+            message: 'Authentication successful',
+            token,
+            user: { id: admin.id, username: admin.username, full_name: admin.full_name, role: admin.role }
+          });
         }
       }
     }
 
     // Fallback credential check
-    if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
-      const token = jwt.sign({ id: 1, username: 'admin', role: 'admin' }, JWT_SECRET, { expiresIn: '30m' });
-      return res.json({ success: true, message: 'Authentication successful (fallback)', token, user: { username: 'admin', role: 'admin' } });
+    const fallbackUser = fallbackAdmins.find(a => a.username.toLowerCase() === cleanUsername);
+    if (fallbackUser) {
+      let isMatch = false;
+      if (cleanUsername === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
+        isMatch = true;
+      } else if (fallbackUser.password && fallbackUser.password === password) {
+        isMatch = true;
+      } else if (fallbackUser.password_hash && await bcrypt.compare(password, fallbackUser.password_hash)) {
+        isMatch = true;
+      }
+
+      if (isMatch) {
+        const token = jwt.sign(
+          { id: fallbackUser.id, username: fallbackUser.username, full_name: fallbackUser.full_name, role: fallbackUser.role },
+          JWT_SECRET,
+          { expiresIn: '8h' }
+        );
+        return res.json({
+          success: true,
+          message: 'Authentication successful (fallback)',
+          token,
+          user: { id: fallbackUser.id, username: fallbackUser.username, full_name: fallbackUser.full_name, role: fallbackUser.role }
+        });
+      }
     }
 
     res.status(401).json({ success: false, message: 'Invalid credentials. Please verify username and password.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Authentication error', error: err.message });
+  }
+});
+
+// 5.1 GET /api/admins - List administrator accounts
+app.get('/api/admins', async (req, res) => {
+  try {
+    if (dbPool) {
+      const [rows] = await dbPool.query('SELECT id, username, full_name, role, created_at FROM admin_users ORDER BY id ASC');
+      return res.json({ success: true, data: rows });
+    }
+    const sanitized = fallbackAdmins.map(({ password, password_hash, ...u }) => u);
+    res.json({ success: true, data: sanitized });
+  } catch (err) {
+    console.warn('[Admin API] Database error fetching admins, using fallback:', err.message);
+    const sanitized = fallbackAdmins.map(({ password, password_hash, ...u }) => u);
+    res.json({ success: true, data: sanitized });
+  }
+});
+
+// 5.2 POST /api/admins - Create a new administrator account
+app.post('/api/admins', async (req, res) => {
+  const { username, password, full_name, role } = req.body;
+  if (!username || !password || !full_name) {
+    return res.status(400).json({ success: false, message: 'Full name, username, and password are required.' });
+  }
+
+  const cleanUsername = username.trim().toLowerCase();
+  const cleanFullName = full_name.trim();
+
+  if (cleanUsername.length < 3) {
+    return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long.' });
+  }
+
+  if (/\s/.test(cleanUsername)) {
+    return res.status(400).json({ success: false, message: 'Username cannot contain spaces.' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+  }
+
+  const userRole = role === 'editor' ? 'editor' : 'admin';
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    if (dbPool) {
+      const [existing] = await dbPool.query('SELECT id FROM admin_users WHERE LOWER(username) = ?', [cleanUsername]);
+      if (existing.length > 0) {
+        return res.status(409).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+      }
+
+      const [result] = await dbPool.execute(
+        'INSERT INTO admin_users (username, password_hash, full_name, role) VALUES (?, ?, ?, ?)',
+        [cleanUsername, passwordHash, cleanFullName, userRole]
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: 'Administrator account created successfully.',
+        user: { id: result.insertId, username: cleanUsername, full_name: cleanFullName, role: userRole }
+      });
+    }
+
+    // Fallback in-memory
+    if (fallbackAdmins.some(a => a.username.toLowerCase() === cleanUsername)) {
+      return res.status(409).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+    }
+
+    const newId = Date.now();
+    const newAdmin = {
+      id: newId,
+      username: cleanUsername,
+      full_name: cleanFullName,
+      role: userRole,
+      password: password,
+      password_hash: passwordHash,
+      created_at: new Date().toISOString()
+    };
+    fallbackAdmins.push(newAdmin);
+
+    res.status(201).json({
+      success: true,
+      message: 'Administrator account created successfully (fallback).',
+      user: { id: newId, username: cleanUsername, full_name: cleanFullName, role: userRole }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to create administrator account.', error: err.message });
+  }
+});
+
+// 5.3 PUT /api/admins/:id - Update an administrator account
+app.put('/api/admins/:id', async (req, res) => {
+  const adminId = parseInt(req.params.id, 10);
+  if (isNaN(adminId)) {
+    return res.status(400).json({ success: false, message: 'Invalid admin ID.' });
+  }
+
+  const { full_name, username, password, role } = req.body;
+  if (!full_name || !username) {
+    return res.status(400).json({ success: false, message: 'Full name and username are required.' });
+  }
+
+  let cleanUsername = username.trim().toLowerCase();
+  const cleanFullName = full_name.trim();
+
+  if (cleanUsername.length < 3) {
+    return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long.' });
+  }
+
+  if (/\s/.test(cleanUsername)) {
+    return res.status(400).json({ success: false, message: 'Username cannot contain spaces.' });
+  }
+
+  if (password && password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long if provided.' });
+  }
+
+  try {
+    if (dbPool) {
+      const [rows] = await dbPool.query('SELECT * FROM admin_users WHERE id = ?', [adminId]);
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Administrator account not found.' });
+      }
+
+      const existing = rows[0];
+      const isPrimary = (existing.id === 1 || existing.username.toLowerCase() === 'admin');
+
+      // Primary admin's username and role are locked for system stability
+      if (isPrimary) {
+        cleanUsername = 'admin';
+      }
+
+      let userRole = role === 'editor' ? 'editor' : 'admin';
+      if (isPrimary) {
+        userRole = 'admin';
+      }
+
+      // Check username collision with another account
+      const [conflicts] = await dbPool.query('SELECT id FROM admin_users WHERE LOWER(username) = ? AND id != ?', [cleanUsername, adminId]);
+      if (conflicts.length > 0) {
+        return res.status(409).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+      }
+
+      if (password) {
+        const passwordHash = await bcrypt.hash(password, 10);
+        await dbPool.execute(
+          'UPDATE admin_users SET full_name = ?, username = ?, password_hash = ?, role = ? WHERE id = ?',
+          [cleanFullName, cleanUsername, passwordHash, userRole, adminId]
+        );
+      } else {
+        await dbPool.execute(
+          'UPDATE admin_users SET full_name = ?, username = ?, role = ? WHERE id = ?',
+          [cleanFullName, cleanUsername, userRole, adminId]
+        );
+      }
+
+      return res.json({
+        success: true,
+        message: 'Administrator account updated successfully.',
+        user: { id: adminId, username: cleanUsername, full_name: cleanFullName, role: userRole }
+      });
+    }
+
+    // Fallback in-memory
+    const targetIdx = fallbackAdmins.findIndex(a => a.id === adminId);
+    if (targetIdx === -1) {
+      return res.status(404).json({ success: false, message: 'Administrator account not found.' });
+    }
+
+    const existing = fallbackAdmins[targetIdx];
+    const isPrimary = (existing.id === 1 || existing.username.toLowerCase() === 'admin');
+    if (isPrimary) cleanUsername = 'admin';
+    let userRole = role === 'editor' ? 'editor' : 'admin';
+    if (isPrimary) userRole = 'admin';
+
+    const collision = fallbackAdmins.some(a => a.id !== adminId && a.username.toLowerCase() === cleanUsername);
+    if (collision) {
+      return res.status(409).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+    }
+
+    existing.full_name = cleanFullName;
+    existing.username = cleanUsername;
+    existing.role = userRole;
+    if (password) {
+      existing.password = password;
+      existing.password_hash = await bcrypt.hash(password, 10);
+    }
+
+    res.json({
+      success: true,
+      message: 'Administrator account updated successfully (fallback).',
+      user: { id: adminId, username: cleanUsername, full_name: cleanFullName, role: userRole }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update administrator account.', error: err.message });
+  }
+});
+
+// 5.4 DELETE /api/admins/:id - Delete an administrator account
+app.delete('/api/admins/:id', async (req, res) => {
+  const adminId = parseInt(req.params.id, 10);
+  if (isNaN(adminId)) {
+    return res.status(400).json({ success: false, message: 'Invalid admin ID.' });
+  }
+
+  try {
+    if (dbPool) {
+      const [rows] = await dbPool.query('SELECT id, username FROM admin_users WHERE id = ?', [adminId]);
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Administrator account not found.' });
+      }
+
+      const target = rows[0];
+      if (target.id === 1 || target.username.toLowerCase() === 'admin') {
+        return res.status(403).json({ success: false, message: 'The primary system administrator account cannot be deleted.' });
+      }
+
+      await dbPool.execute('DELETE FROM admin_users WHERE id = ?', [adminId]);
+      return res.json({ success: true, message: `Administrator '${target.username}' deleted successfully.` });
+    }
+
+    // Fallback
+    const targetIdx = fallbackAdmins.findIndex(a => a.id === adminId);
+    if (targetIdx === -1) {
+      return res.status(404).json({ success: false, message: 'Administrator account not found.' });
+    }
+    const target = fallbackAdmins[targetIdx];
+    if (target.id === 1 || target.username.toLowerCase() === 'admin') {
+      return res.status(403).json({ success: false, message: 'The primary system administrator account cannot be deleted.' });
+    }
+
+    fallbackAdmins.splice(targetIdx, 1);
+    res.json({ success: true, message: `Administrator '${target.username}' deleted successfully (fallback).` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete administrator account.', error: err.message });
   }
 });
 

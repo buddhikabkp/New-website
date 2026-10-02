@@ -271,8 +271,14 @@ button, input, select, textarea {
 /* Search Box */
 .search-input-wrapper {
   position: relative;
+  display: block;
+  width: 100%;
+}
+
+.filter-toolbar .search-input-wrapper {
   flex: 1 1 240px;
   min-width: 200px;
+  width: auto;
 }
 
 .search-input-wrapper svg {
@@ -282,6 +288,9 @@ button, input, select, textarea {
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+  width: 18px;
+  height: 18px;
+  z-index: 2;
 }
 
 .search-input {
@@ -375,21 +384,231 @@ button, input, select, textarea {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
-/* Sort Dropdown */
-.sort-select-wrapper select {
+/* ==========================================================================
+   CUSTOM DROPDOWN / SELECT COMPONENT
+   Eye-pleasing unified dropdown styling across the entire website
+   ========================================================================== */
+
+.custom-select-wrapper {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.custom-select-wrapper.is-form-control {
+  display: block;
+  width: 100%;
+}
+
+.custom-select-native {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* 1. Custom Trigger Button */
+.custom-select-trigger {
   background: #ffffff;
   border: 1px solid var(--border-cream);
   color: var(--text-dark);
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.85rem;
+  font-family: inherit;
+  font-size: 0.86rem;
   font-weight: 500;
   cursor: pointer;
   outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.sort-select-wrapper select:focus {
+/* Pill variant (Toolbars: sort on landing page, category filter on admin portal) */
+.custom-select-wrapper.is-pill .custom-select-trigger {
+  padding: 0.45rem 1.15rem;
+  height: 38px;
+  border-radius: 9999px;
+  border-color: #dcd1c2;
+}
+
+.custom-select-wrapper.is-pill .custom-select-trigger:hover {
+  background: #f7efe6;
+  border-color: #cbbaa5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Form control variant (Modals: Category, Role, etc.) */
+.custom-select-wrapper.is-form-control .custom-select-trigger {
+  width: 100%;
+  padding: 0.62rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: #ffffff;
+}
+
+.custom-select-wrapper.is-form-control .custom-select-trigger:hover {
+  border-color: #cbbaa5;
+}
+
+/* Small inline variant (e.g. Difficulty in facilities row) */
+.custom-select-wrapper.is-small .custom-select-trigger {
+  padding: 0.2rem 0.55rem;
+  height: 28px;
+  font-size: 0.82rem;
+  border-radius: 6px;
+}
+
+/* Open / Active Trigger State */
+.custom-select-wrapper.is-open .custom-select-trigger {
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(148, 83, 43, 0.14);
+  background: #ffffff;
+}
+
+/* Disabled Trigger State */
+.custom-select-wrapper.is-disabled .custom-select-trigger {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: #fbf8f3;
+  pointer-events: none;
+}
+
+.custom-select-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #2c231a;
+  font-weight: 500;
+}
+
+/* 2. Chevron Arrow */
+.custom-select-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #7d7265;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), color 0.18s;
+}
+
+.custom-select-arrow svg {
+  display: block;
+}
+
+.custom-select-wrapper.is-open .custom-select-arrow {
+  transform: rotate(180deg);
+  color: var(--color-primary);
+}
+
+/* 3. Floating Dropdown Menu */
+.custom-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 320px;
+  background: #ffffff;
+  border: 1px solid #ebdccb;
+  border-radius: 14px;
+  padding: 0.4rem;
+  box-shadow: 0 10px 30px rgba(35, 25, 15, 0.14), 0 3px 8px rgba(35, 25, 15, 0.05);
+  z-index: 10000;
+  display: none;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for Dropdown Menu */
+.custom-select-menu::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-select-menu::-webkit-scrollbar-thumb {
+  background: #ded2c4;
+  border-radius: 9999px;
+}
+
+/* Upward opening if near bottom of screen */
+.custom-select-wrapper.open-upward .custom-select-menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.custom-select-wrapper.is-open .custom-select-menu {
+  display: block;
+  animation: customSelectMenuFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes customSelectMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-select-wrapper.open-upward.is-open .custom-select-menu {
+  animation: customSelectMenuFadeInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes customSelectMenuFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 4. Dropdown Option Items */
+.custom-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #473e34;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1.25;
+}
+
+.custom-select-option:hover {
+  background: #faf3ea;
+  color: #94532b;
+}
+
+.custom-select-option.is-selected {
+  background: #f7efe6;
+  color: #783e18;
+  font-weight: 600;
+}
+
+.custom-select-option .option-check {
+  color: #94532b;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.custom-select-option.is-selected .option-check {
+  opacity: 1;
 }
 
 /* Results Count */
@@ -869,10 +1088,14 @@ button, input, select, textarea {
 .add-attractions-col {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .add-attraction-search {
+  flex: 0 0 auto !important;
+  width: 100% !important;
   margin-bottom: 1.25rem;
+  position: relative;
 }
 
 .add-attractions-scroll-list {
@@ -1011,32 +1234,172 @@ button, input, select, textarea {
 .admin-header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.65rem;
 }
 
-.logged-in-pill {
-  background: #f0e6da;
-  color: #4a3e31;
-  font-size: 0.84rem;
-  font-weight: 500;
-  padding: 0.35rem 0.95rem;
-  border-radius: 9999px;
-  border: 1px solid #d9cbba;
-}
-
+/* Common cohesive pill design for header items */
+.btn-manage-admins,
+.logged-in-pill,
 .sign-out-btn {
-  background: none;
-  border: none;
-  color: #7d7265;
-  font-size: 0.86rem;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 0.84rem;
   font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 1. Manage Admins Button */
+.btn-manage-admins {
+  background: #ffffff;
+  color: var(--text-dark);
+  border: 1px solid #dcd1c2;
   cursor: pointer;
-  transition: color 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.btn-manage-admins svg {
+  color: #5a4b3d;
+  transition: transform 0.15s ease;
+}
+
+.btn-manage-admins:hover {
+  background: #f7efe6;
+  border-color: #c5b49f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-manage-admins:hover svg {
+  transform: scale(1.08);
+}
+
+/* 2. Logged-in Status Pill (Eye-pleasing warm badge) */
+.logged-in-pill {
+  background: #f4ede3;
+  color: #4a3e31;
+  border: 1px solid #dcd1c2;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  user-select: none;
+}
+
+.status-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #27ae60;
+  display: inline-block;
+  box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+  flex-shrink: 0;
+}
+
+/* 3. Sign Out Button (Matching pill style) */
+.sign-out-btn {
+  background: #ffffff;
+  color: #6b5d4f;
+  border: 1px solid #dcd1c2;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.sign-out-btn svg {
+  color: #7d7265;
+  transition: all 0.15s ease;
 }
 
 .sign-out-btn:hover {
+  background: #fdf2f0;
+  border-color: #f5b7b1;
   color: #c0392b;
-  text-decoration: underline;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(192, 57, 43, 0.1);
+}
+
+.sign-out-btn:hover svg {
+  color: #c0392b;
+  transform: translateX(1px);
+}
+
+.admin-users-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3ece1;
+  vertical-align: middle;
+}
+
+.admin-users-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-user-pill-you {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #eaf4ed;
+  color: #2c6f37;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  margin-left: 0.4rem;
+  display: inline-block;
+}
+
+.admin-user-pill-primary {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #fdf2e9;
+  color: #b25316;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  margin-left: 0.4rem;
+  display: inline-block;
+}
+
+.btn-edit-admin-row {
+  background: #ffffff;
+  border: 1px solid #dcd1c2;
+  color: #3d332a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s;
+}
+
+.btn-edit-admin-row:hover {
+  background: #f7efe6;
+  border-color: #cbbaa5;
+  color: #221c16;
+}
+
+.btn-delete-admin-row {
+  background: none;
+  border: 1px solid #f5b7b1;
+  color: #c0392b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s;
+}
+
+.btn-delete-admin-row:hover {
+  background: #fdf0ed;
+  border-color: #c0392b;
 }
 
 /* Admin Dashboard Container */

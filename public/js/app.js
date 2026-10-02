@@ -462,12 +462,14 @@ async function handleLandingAdminLogin(e) {
     const data = await res.json();
     if (res.ok && data.success) {
       localStorage.setItem('ceylon_admin_token', data.token || 'demo_token');
+      localStorage.setItem('ceylon_admin_user', JSON.stringify(data.user || { id: 1, username: username, full_name: username, role: 'admin' }));
       closeAdminLoginModal();
       window.location.href = 'admin.html';
     } else {
       // Demo bypass check
       if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
         localStorage.setItem('ceylon_admin_token', 'local_admin_token');
+        localStorage.setItem('ceylon_admin_user', JSON.stringify({ id: 1, username: 'admin', full_name: 'System Administrator', role: 'admin' }));
         closeAdminLoginModal();
         window.location.href = 'admin.html';
       } else {
@@ -481,6 +483,7 @@ async function handleLandingAdminLogin(e) {
     // Fallback authentication
     if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
       localStorage.setItem('ceylon_admin_token', 'local_admin_token');
+      localStorage.setItem('ceylon_admin_user', JSON.stringify({ id: 1, username: 'admin', full_name: 'System Administrator', role: 'admin' }));
       closeAdminLoginModal();
       window.location.href = 'admin.html';
     } else {
