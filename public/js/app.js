@@ -80,6 +80,8 @@ async function fetchAttractions() {
 function initLandingPage() {
   setupFilterListeners();
   renderAttractionsGrid();
+  checkUrlParamsForAdmin();
+  setupAdminKeyListeners();
 }
 
 function setupFilterListeners() {
@@ -375,6 +377,119 @@ function initDetailsMap(att) {
 function closeDetailsModal() {
   const modal = document.getElementById('details-modal');
   if (modal) modal.classList.remove('active');
+}
+
+// ==========================================================================
+// LANDING PAGE ADMIN LOGIN MODAL & BLUR EFFECT
+// ==========================================================================
+function checkUrlParamsForAdmin() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('login') === 'admin' || urlParams.get('admin') === '1') {
+    // Clear query parameter from URL without page reload
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+    openAdminLoginModal();
+  }
+}
+
+function setupAdminKeyListeners() {
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAdminLoginModal();
+      closeDetailsModal();
+    }
+  });
+}
+
+function handleAdminBtnClick() {
+  const token = localStorage.getItem('ceylon_admin_token');
+  if (token) {
+    window.location.href = 'admin.html';
+  } else {
+    openAdminLoginModal();
+  }
+}
+
+function openAdminLoginModal() {
+  const modal = document.getElementById('landing-admin-modal');
+  if (!modal) return;
+
+  // Add blur class to body (blurs landing page content)
+  document.body.classList.add('landing-modal-open');
+  modal.classList.add('active');
+
+  // Reset any previous error messages
+  const errDiv = document.getElementById('landing-login-error');
+  if (errDiv) {
+    errDiv.style.display = 'none';
+    errDiv.textContent = '';
+  }
+
+  // Auto-focus input
+  setTimeout(() => {
+    const pwdInput = document.getElementById('landing-login-password');
+    const uInput = document.getElementById('landing-login-username');
+    if (uInput && !uInput.value) {
+      uInput.focus();
+    } else if (pwdInput) {
+      pwdInput.focus();
+    }
+  }, 100);
+}
+
+function closeAdminLoginModal() {
+  const modal = document.getElementById('landing-admin-modal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  // Remove blur from landing page
+  document.body.classList.remove('landing-modal-open');
+}
+
+async function handleLandingAdminLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('landing-login-username').value.trim();
+  const password = document.getElementById('landing-login-password').value;
+  const errorDiv = document.getElementById('landing-login-error');
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem('ceylon_admin_token', data.token || 'demo_token');
+      closeAdminLoginModal();
+      window.location.href = 'admin.html';
+    } else {
+      // Demo bypass check
+      if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
+        localStorage.setItem('ceylon_admin_token', 'local_admin_token');
+        closeAdminLoginModal();
+        window.location.href = 'admin.html';
+      } else {
+        if (errorDiv) {
+          errorDiv.textContent = data.message || 'Invalid username or password';
+          errorDiv.style.display = 'block';
+        }
+      }
+    }
+  } catch (err) {
+    // Fallback authentication
+    if (username === 'admin' && (password === 'Admin@Ceylon2026' || password === 'admin')) {
+      localStorage.setItem('ceylon_admin_token', 'local_admin_token');
+      closeAdminLoginModal();
+      window.location.href = 'admin.html';
+    } else {
+      if (errorDiv) {
+        errorDiv.textContent = 'Invalid credentials. Use admin / Admin@Ceylon2026';
+        errorDiv.style.display = 'block';
+      }
+    }
+  }
 }
 
 // ==========================================================================

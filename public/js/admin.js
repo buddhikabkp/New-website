@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initAdminPortal() {
-  checkAuth();
+  if (!checkAuth()) return;
   setupAdminFilters();
   await loadAdminAttractions();
 }
@@ -38,14 +38,13 @@ async function initAdminPortal() {
 // AUTHENTICATION
 // ==========================================================================
 function checkAuth() {
-  // Default to logged in if token exists or local dev session
   if (!ADMIN_STATE.token) {
-    // Show login modal
-    const loginModal = document.getElementById('admin-login-modal');
-    if (loginModal) loginModal.classList.add('active');
-  } else {
-    updateAuthHeader(true);
+    // Redirect to landing page and open blurred login popup
+    window.location.replace('index.html?login=admin');
+    return false;
   }
+  updateAuthHeader(true);
+  return true;
 }
 
 function updateAuthHeader(isLoggedIn) {
@@ -111,8 +110,7 @@ function handleAdminLogout() {
   localStorage.removeItem('ceylon_admin_token');
   ADMIN_STATE.token = null;
   updateAuthHeader(false);
-  const loginModal = document.getElementById('admin-login-modal');
-  if (loginModal) loginModal.classList.add('active');
+  window.location.replace('index.html');
 }
 
 // ==========================================================================
@@ -244,16 +242,10 @@ function renderAdminTable() {
 function openAddModal() {
   ADMIN_STATE.editingId = null;
   document.getElementById('attraction-modal-title').textContent = 'Add New Attraction';
-  document.getElementById('attraction-form').reset();
-  document.getElementById('form-error-alert').style.display = 'none';
+  handleClearForm();
 
-  // Set default coordinates & values
-  document.getElementById('field-latitude').value = '7.2936';
-  document.getElementById('field-longitude').value = '80.6413';
-  document.getElementById('field-distance').value = '5.0';
-  document.getElementById('field-rating').value = '4.5';
-  document.getElementById('field-duration').value = '60';
-
+  const modalBody = document.querySelector('#attraction-crud-modal .modal-body');
+  if (modalBody) modalBody.scrollTop = 0;
   document.getElementById('attraction-crud-modal').classList.add('active');
 }
 
@@ -292,11 +284,164 @@ function openEditModal(attractionId) {
   document.getElementById('field-elderly').checked = Boolean(att.elderly_friendly);
   document.getElementById('field-difficulty').value = att.walking_difficulty || 'Easy';
 
+  // Setup image preview if existing
+  const fileInput = document.getElementById('field-image-file');
+  if (fileInput) fileInput.value = '';
+  if (att.image_url) {
+    showImagePreview(att.image_url);
+  } else {
+    clearAttractionImagePreview();
+  }
+
+  const modalBody = document.querySelector('#attraction-crud-modal .modal-body');
+  if (modalBody) modalBody.scrollTop = 0;
   document.getElementById('attraction-crud-modal').classList.add('active');
 }
 
 function closeCrudModal() {
   document.getElementById('attraction-crud-modal').classList.remove('active');
+  clearAttractionImage();
+}
+
+function handleClearForm() {
+  const form = document.getElementById('attraction-form');
+  if (form) form.reset();
+
+  const inputIds = [
+    'field-name', 'field-distance', 'field-price-display',
+    'field-price-local', 'field-price-foreign', 'field-rating',
+    'field-duration', 'field-latitude', 'field-longitude',
+    'field-opening', 'field-image', 'field-desc',
+    'field-history', 'field-dress', 'field-photo',
+    'field-tips', 'field-emergency'
+  ];
+
+  inputIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  const catEl = document.getElementById('field-category');
+  if (catEl) catEl.value = 'Religious';
+  const diffEl = document.getElementById('field-difficulty');
+  if (diffEl) diffEl.value = 'Easy';
+
+  ['field-wheelchair', 'field-parking', 'field-restrooms', 'field-elderly'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+
+  clearAttractionImage();
+
+  const errorAlert = document.getElementById('form-error-alert');
+  if (errorAlert) {
+    errorAlert.textContent = '';
+    errorAlert.style.display = 'none';
+  }
+}
+
+// ==========================================================================
+// LOCAL IMAGE UPLOAD & PREVIEW LOGIC
+// ==========================================================================
+async function handleLocalImageUpload(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('upload-status-text');
+  const clearBtn = document.getElementById('btn-clear-image');
+
+  if (statusEl) {
+    statusEl.textContent = `Uploading ${file.name}...`;
+    statusEl.style.color = 'var(--text-muted)';
+  }
+
+  // Instant local preview via FileReader
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    showImagePreview(evt.target.result);
+  };
+  reader.readAsDataURL(file);
+
+  // Upload file via /api/upload
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      document.getElementById('field-image').value = data.url;
+      if (statusEl) {
+        statusEl.textContent = `✓ ${file.name}`;
+        statusEl.style.color = '#2c6f37';
+      }
+      if (clearBtn) clearBtn.style.display = 'inline';
+    } else {
+      throw new Error(data.message || 'Server upload failed');
+    }
+  } catch (err) {
+    console.warn('[Admin Upload] Server upload unavailable, using base64 preview:', err);
+    if (reader.result) {
+      document.getElementById('field-image').value = reader.result;
+    }
+    if (statusEl) {
+      statusEl.textContent = `✓ ${file.name} (Local)`;
+      statusEl.style.color = '#2c6f37';
+    }
+    if (clearBtn) clearBtn.style.display = 'inline';
+  }
+}
+
+function handleImageUrlInput(url) {
+  const val = (url || '').trim();
+  if (val) {
+    showImagePreview(val);
+    const clearBtn = document.getElementById('btn-clear-image');
+    if (clearBtn) clearBtn.style.display = 'inline';
+    const statusEl = document.getElementById('upload-status-text');
+    if (statusEl) statusEl.textContent = '';
+  } else {
+    clearAttractionImagePreview();
+  }
+}
+
+function showImagePreview(src) {
+  const previewBox = document.getElementById('image-preview-container');
+  const previewImg = document.getElementById('image-preview-el');
+  const clearBtn = document.getElementById('btn-clear-image');
+  if (previewImg) {
+    previewImg.src = src;
+    previewImg.onerror = function() {
+      if (previewBox) previewBox.style.display = 'none';
+    };
+    previewImg.onload = function() {
+      if (previewBox) previewBox.style.display = 'block';
+    };
+  }
+  if (previewBox && src) previewBox.style.display = 'block';
+  if (clearBtn) clearBtn.style.display = 'inline';
+}
+
+function clearAttractionImage() {
+  document.getElementById('field-image').value = '';
+  const fileInput = document.getElementById('field-image-file');
+  if (fileInput) fileInput.value = '';
+  clearAttractionImagePreview();
+}
+
+function clearAttractionImagePreview() {
+  const previewBox = document.getElementById('image-preview-container');
+  const previewImg = document.getElementById('image-preview-el');
+  const statusEl = document.getElementById('upload-status-text');
+  const clearBtn = document.getElementById('btn-clear-image');
+
+  if (previewBox) previewBox.style.display = 'none';
+  if (previewImg) previewImg.src = '';
+  if (statusEl) statusEl.textContent = '';
+  if (clearBtn) clearBtn.style.display = 'none';
 }
 
 async function handleAttractionFormSubmit(e) {

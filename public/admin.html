@@ -160,11 +160,11 @@
           <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label" for="field-rating">Rating (1.0 - 5.0)</label>
-              <input type="number" id="field-rating" class="form-control" step="0.1" min="1.0" max="5.0" value="4.5">
+              <input type="number" id="field-rating" class="form-control" step="0.1" min="1.0" max="5.0" placeholder="e.g. 4.5">
             </div>
             <div class="form-group">
               <label class="form-label" for="field-duration">Est. Duration (mins)</label>
-              <input type="number" id="field-duration" class="form-control" min="15" step="15" value="60">
+              <input type="number" id="field-duration" class="form-control" min="15" step="15" placeholder="e.g. 60">
             </div>
           </div>
 
@@ -185,8 +185,30 @@
               <input type="text" id="field-opening" class="form-control" placeholder="08:00 AM - 05:00 PM">
             </div>
             <div class="form-group">
-              <label class="form-label" for="field-image">Image URL</label>
-              <input type="url" id="field-image" class="form-control" placeholder="https://images.unsplash.com/...">
+              <label class="form-label" for="field-image">Attraction Image (URL or Local File)</label>
+              <div class="image-field-composite">
+                <input type="text" id="field-image" class="form-control" placeholder="https://... or choose local file below" oninput="handleImageUrlInput(this.value)">
+                
+                <div class="image-upload-row">
+                  <label class="btn-upload-file" for="field-image-file">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload Local Image</span>
+                  </label>
+                  <input type="file" id="field-image-file" accept="image/*" style="display: none;" onchange="handleLocalImageUpload(event)">
+                  <span id="upload-status-text" class="upload-status-text"></span>
+                  <button type="button" id="btn-clear-image" class="btn-clear-img" onclick="clearAttractionImage()" style="display: none;">Remove</button>
+                </div>
+
+                <!-- Live Thumbnail Preview -->
+                <div id="image-preview-container" class="image-preview-container" style="display: none;">
+                  <img id="image-preview-el" src="" alt="Attraction Preview">
+                  <span class="preview-badge">Preview</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -208,13 +230,13 @@
                 <input type="checkbox" id="field-wheelchair"> Wheelchair Access
               </label>
               <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
-                <input type="checkbox" id="field-parking" checked> Vehicle Parking
+                <input type="checkbox" id="field-parking"> Vehicle Parking
               </label>
               <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
-                <input type="checkbox" id="field-restrooms" checked> Restrooms
+                <input type="checkbox" id="field-restrooms"> Restrooms
               </label>
               <label style="display: flex; align-items: center; gap: 0.35rem; cursor: pointer;">
-                <input type="checkbox" id="field-elderly" checked> Elderly Friendly
+                <input type="checkbox" id="field-elderly"> Elderly Friendly
               </label>
               <label style="display: flex; align-items: center; gap: 0.35rem;">
                 Difficulty: 
@@ -250,9 +272,12 @@
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream);" onclick="closeCrudModal()">Cancel</button>
-          <button type="submit" class="btn-primary-pill" style="padding: 0.65rem 1.4rem;">Save Attraction</button>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" id="btn-clear-form" class="btn-outline-pill" style="color: #c0392b; border-color: #f5b7b1;" onclick="handleClearForm()">Clear Form</button>
+          <div style="display: flex; gap: 0.8rem; align-items: center;">
+            <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream);" onclick="closeCrudModal()">Cancel</button>
+            <button type="submit" class="btn-primary-pill" style="padding: 0.65rem 1.4rem;">Save Attraction</button>
+          </div>
         </div>
       </form>
     </div>

@@ -53,6 +53,42 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static frontend assets from public/
 app.use(express.static(path.join(__dirname, 'public')));
 
+const multer = require('multer');
+const fs = require('fs');
+
+// Ensure public/images directory exists
+const imagesDir = path.join(__dirname, 'public/images');
+if (!fs.existsSync(imagesDir)) {
+  fs.mkdirSync(imagesDir, { recursive: true });
+}
+
+// Multer Storage Configuration for Local Image Uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, imagesDir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeBase = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e4);
+    cb(null, `attraction-${safeBase}-${uniqueSuffix}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: function (req, file, cb) {
+    const filetypes = /jpeg|jpg|png|webp|gif|svg/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only image files (JPEG, JPG, PNG, WEBP, GIF, SVG) are allowed!'));
+  }
+});
+
 // Friendly page routes
 app.get('/planner', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/planner.html'));
@@ -60,6 +96,22 @@ app.get('/planner', (req, res) => {
 
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/admin.html'));
+});
+
+// POST /api/upload - Upload local image file
+app.post('/api/upload', (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+    } else if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+    const imageUrl = `images/${req.file.filename}`;
+    res.json({ success: true, message: 'Image uploaded successfully', url: imageUrl });
+  });
 });
 
 // ==========================================================================

@@ -19,7 +19,7 @@
   <header class="hero-wrapper">
     <!-- Top Nav with Admin Button -->
     <div class="hero-top-nav">
-      <a href="admin.html" class="admin-pill-btn">Admin</a>
+      <button type="button" class="admin-pill-btn" id="landing-admin-btn" onclick="handleAdminBtnClick()">Admin</button>
     </div>
 
     <div class="hero-content">
@@ -137,6 +137,41 @@
         <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream);" onclick="closeDetailsModal()">Close</button>
         <button type="button" class="btn-add-plan" id="modal-btn-add-plan">+ Add to Plan</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       ADMIN LOGIN MODAL (Landing Page with Blur Effect)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="landing-admin-modal" onclick="if(event.target === this) closeAdminLoginModal()">
+    <div class="modal-card" style="max-width: 420px;" role="dialog" aria-modal="true" aria-labelledby="landing-login-title">
+      <div class="modal-header">
+        <h3 class="modal-title" id="landing-login-title">Administrator Login</h3>
+        <button type="button" class="btn-modal-close" onclick="closeAdminLoginModal()" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="landing-login-form" onsubmit="handleLandingAdminLogin(event)">
+        <div class="modal-body">
+          <p style="font-size: 0.85rem; color: #7d7265; margin-bottom: 1.25rem;">
+            Please enter your administrative credentials to access the Admin Portal.
+          </p>
+
+          <div id="landing-login-error" class="form-error-msg" style="display: none; margin-bottom: 1rem; padding: 0.6rem; background: #fdf0ed; border: 1px solid #f5b7b1; border-radius: 6px; color: #c0392b; font-size: 0.85rem;"></div>
+
+          <div class="form-group">
+            <label class="form-label" for="landing-login-username">Username</label>
+            <input type="text" id="landing-login-username" class="form-control" value="admin" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="landing-login-password">Password</label>
+            <input type="password" id="landing-login-password" class="form-control" value="Admin@Ceylon2026" required autocomplete="current-password">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream); padding: 0.65rem 1.2rem;" onclick="closeAdminLoginModal()">Cancel</button>
+          <button type="submit" class="btn-primary-pill" style="padding: 0.65rem 1.4rem;">Log In</button>
+        </div>
+      </form>
     </div>
   </div>
 
