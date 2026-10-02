@@ -6,7 +6,7 @@ Developed for **BIT Semester Project (ITE2953)** adhering strictly to the **IEEE
 
 ---
 
-## 🌟 Key Pages (Matching Project Screenshots)
+## 🌟 Key Pages
 
 1. **Landing Page (`index.html`)**:
    - **Hero Section**: Elegant warm brown-to-pine green gradient background, title, tagline, "Plan My Day Trip →" and "Browse Attractions" CTA buttons, and verified statistics counters (12+ Verified Sites, 25km Coverage Radius, Free Day Planner).
@@ -40,49 +40,6 @@ Developed for **BIT Semester Project (ITE2953)** adhering strictly to the **IEEE
      - Administrator Login modal (Default: `admin` / `Admin@Ceylon2026`).
      - Add / Edit modal with comprehensive field validation (enforcing the 25 km Haloluwa boundary business rule).
      - Permanent Delete confirmation modal.
-
----
-
-## 🚀 How to Run the Website
-
-### Option 1: Running with Node.js + XAMPP MySQL (Recommended per SRS)
-
-1. **Start XAMPP**:
-   - Open **XAMPP Control Panel** and ensure **MySQL** is running (green status on port 3306).
-2. **Start Server**:
-   ```bash
-   node server.js
-   ```
-3. **Open in Browser**:
-   - **Landing Page**: [http://localhost:3000](http://localhost:3000)
-   - **Day Trip Planner**: [http://localhost:3000/planner.html](http://localhost:3000/planner.html)
-   - **Admin Portal**: [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
-
----
-
-### Option 2: Running Directly via XAMPP Apache + PHP + MySQL
-
-1. **Copy or Symlink project to XAMPP `htdocs`**:
-   - Copy this project folder to `C:\xampp\htdocs\ceylon_journey`
-2. **Start Apache & MySQL in XAMPP**.
-3. **Open in Browser**:
-   - [http://localhost/ceylon_journey/public/index.html](http://localhost/ceylon_journey/public/index.html)
-   - [http://localhost/ceylon_journey/public/planner.html](http://localhost/ceylon_journey/public/planner.html)
-   - [http://localhost/ceylon_journey/public/admin.html](http://localhost/ceylon_journey/public/admin.html)
-
----
-
-## 🗄️ Database Setup
-
-The database schema and seed data are located in the `database/` folder:
-- `database/schema.sql` - Tables for `admin_users`, `attractions`, and `itineraries`.
-- `database/seed.sql` - Pre-seeded with 12 verified attractions around Haloluwa, Kandy matching the project screenshots.
-
-To re-apply manually via command line:
-```powershell
-Get-Content database\schema.sql | & "C:\xampp\mysql\bin\mysql.exe" -u root
-Get-Content database\seed.sql | & "C:\xampp\mysql\bin\mysql.exe" -u root
-```
 
 ---
 
