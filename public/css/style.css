@@ -835,12 +835,16 @@ button, input, select, textarea {
   transform: translateX(-3px);
 }
 
+/* Planner Header Title */
 .planner-page-title {
   font-family: var(--font-serif);
-  font-size: 1.45rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-dark);
-  border-left: 1px solid var(--border-cream);
+  letter-spacing: -0.015em;
+  margin: 0;
+  line-height: 1.2;
+  border-left: 1.5px solid var(--border-cream);
   padding-left: 1.25rem;
 }
 
@@ -851,9 +855,16 @@ button, input, select, textarea {
 }
 
 .header-location-tag {
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.84rem;
   font-weight: 500;
   color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-cream);
 }
 
 /* Two-Column Layout */
@@ -868,12 +879,82 @@ button, input, select, textarea {
   flex: 1;
 }
 
+/* Eye-Pleasing Column Header Bars */
+.planner-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.85rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1.5px solid rgba(216, 202, 186, 0.55);
+}
+
+.planner-col-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.col-header-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  flex-shrink: 0;
+}
+
+.itinerary-icon-badge {
+  background: rgba(184, 91, 53, 0.1);
+  color: var(--color-primary);
+  border: 1px solid rgba(184, 91, 53, 0.24);
+}
+
+.add-icon-badge {
+  background: rgba(44, 95, 60, 0.1);
+  color: #2c5f3c;
+  border: 1px solid rgba(44, 95, 60, 0.24);
+}
+
 .planner-col-title {
   font-family: var(--font-serif);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-dark);
-  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.planner-col-badge {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  background: #f4eee6;
+  color: var(--text-muted);
+  border: 1px solid rgba(216, 202, 186, 0.8);
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.planner-col-badge.has-stops {
+  background: rgba(44, 95, 60, 0.12);
+  color: #235432;
+  border-color: rgba(44, 95, 60, 0.32);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(44, 95, 60, 0.1);
+}
+
+.planner-col-badge.subtle-badge {
+  background: #fbf8f3;
+  color: var(--text-muted);
+  border-color: var(--border-cream);
 }
 
 /* Itinerary Left Column */

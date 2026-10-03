@@ -555,6 +555,11 @@ function renderPlannerAddList(filterText = '') {
     );
   }
 
+  const availBadge = document.getElementById('planner-available-badge');
+  if (availBadge) {
+    availBadge.textContent = `${items.length} available`;
+  }
+
   list.innerHTML = items.map(att => {
     const isAdded = APP_STATE.itinerary.some(item => item.id === att.id);
     const cat = CATEGORY_META[att.category] || { icon: '📍' };
@@ -582,10 +587,21 @@ function renderPlannerAddList(filterText = '') {
 function renderPlannerItinerary() {
   const container = document.getElementById('itinerary-stops-container');
   const countTitle = document.getElementById('itinerary-stops-count');
+  const stopsBadge = document.getElementById('itinerary-stops-badge');
   if (!container) return;
 
   const count = APP_STATE.itinerary.length;
-  if (countTitle) {
+  if (stopsBadge) {
+    stopsBadge.textContent = `${count} ${count === 1 ? 'stop' : 'stops'}`;
+    if (count > 0) {
+      stopsBadge.classList.add('has-stops');
+    } else {
+      stopsBadge.classList.remove('has-stops');
+    }
+    if (countTitle) {
+      countTitle.textContent = 'Your Itinerary';
+    }
+  } else if (countTitle) {
     countTitle.textContent = `Your Itinerary (${count} stops)`;
   }
 
