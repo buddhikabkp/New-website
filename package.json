@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "cypress run",
+    "cypress:run": "cypress run",
+    "cypress:open": "cypress open"
   },
   "keywords": [
     "kandy",
@@ -24,5 +27,8 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.4.0",
     "mysql2": "^3.9.7"
+  },
+  "devDependencies": {
+    "cypress": "^16.1.1"
   }
 }

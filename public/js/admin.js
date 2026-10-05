@@ -239,21 +239,25 @@ function renderAdminTable() {
     const cat = CATEGORY_META[att.category] || { icon: '📍', bg: '#eee', color: '#333' };
     const ticketStr = att.price_display || (parseFloat(att.price_local) === 0 ? 'Free' : `LKR ${parseFloat(att.price_local).toLocaleString()}`);
     const ratingStr = `★ ${parseFloat(att.rating || 4.5).toFixed(1)}`;
+    const safeName = escapeHtml(att.name);
+    const safeDesc = escapeHtml(att.description);
+    const safeCategory = escapeHtml(att.category);
+    const safeTicket = escapeHtml(ticketStr);
 
     return `
       <tr>
         <td class="td-index">${index + 1}</td>
         <td class="td-name-col">
-          <div class="td-name-title">${att.name}</div>
-          <div class="td-name-snippet">${att.description}</div>
+          <div class="td-name-title">${safeName}</div>
+          <div class="td-name-snippet">${safeDesc}</div>
         </td>
         <td>
           <span class="td-category-badge" style="background-color: ${cat.bg}; color: ${cat.color};">
-            ${cat.icon} ${att.category}
+            ${cat.icon} ${safeCategory}
           </span>
         </td>
         <td class="td-distance">${att.distance_km}km</td>
-        <td class="td-ticket">${ticketStr}</td>
+        <td class="td-ticket">${safeTicket}</td>
         <td class="td-rating">${ratingStr}</td>
         <td>
           <div class="td-actions-group">
@@ -750,7 +754,7 @@ function renderAdminUsersTable() {
             </svg>
             Edit
           </button>
-          <button type="button" class="btn-delete-admin-row" onclick="openDeleteAdminConfirm(${user.id}, '${safeFullName.replace(/'/g, "\\'")}')" title="Delete administrator">
+          <button type="button" class="btn-delete-admin-row" onclick="openDeleteAdminConfirm(${user.id})" title="Delete administrator">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -952,7 +956,7 @@ function handleFormDeleteAdminClick() {
     alert('The primary system administrator account cannot be deleted.');
     return;
   }
-  openDeleteAdminConfirm(user.id, user.full_name || user.username);
+  openDeleteAdminConfirm(user.id);
 }
 
 async function handleAdminFormSubmit(e) {
@@ -1105,8 +1109,10 @@ function showAdminAlert(msg, type = 'error') {
 
 function openDeleteAdminConfirm(adminId, adminName) {
   ADMIN_STATE.deleteAdminId = adminId;
+  const user = (ADMIN_STATE.adminUsers || []).find(u => u.id === adminId);
+  const displayName = adminName || (user ? (user.full_name || user.username) : 'this administrator');
   const nameEl = document.getElementById('delete-admin-target-name');
-  if (nameEl) nameEl.textContent = adminName;
+  if (nameEl) nameEl.textContent = displayName;
   const modal = document.getElementById('delete-admin-modal');
   if (modal) modal.classList.add('active');
 }

@@ -179,24 +179,28 @@ function renderAttractionsGrid() {
   grid.innerHTML = APP_STATE.filteredAttractions.map(att => {
     const isAdded = APP_STATE.itinerary.some(item => item.id === att.id);
     const cat = CATEGORY_META[att.category] || { icon: '📍', class: '', color: '#333' };
+    const safeImg = escapeHtml(att.image_url || 'https://images.unsplash.com/photo-1546708973-b339540b5162?w=800');
+    const safeName = escapeHtml(att.name);
+    const safeDesc = escapeHtml(att.description);
+    const safeCat = escapeHtml(att.category);
 
     return `
       <article class="attraction-card" data-id="${att.id}">
         <div class="card-image-wrap">
-          <img src="${att.image_url || 'https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'}" alt="${att.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
+          <img src="${safeImg}" alt="${safeName}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
           <span class="badge-category-float" style="color: ${cat.color};">
-            ${cat.icon} ${att.category}
+            ${cat.icon} ${safeCat}
           </span>
           <span class="badge-rating-float">
-            ★ ${parseFloat(att.rating).toFixed(1)}
+            ★ ${parseFloat(att.rating || 4.5).toFixed(1)}
           </span>
         </div>
         <div class="card-content">
           <div class="card-title-row">
-            <h3 class="card-title">${att.name}</h3>
+            <h3 class="card-title">${safeName}</h3>
             <span class="card-distance">${att.distance_km} km</span>
           </div>
-          <p class="card-desc">${att.description}</p>
+          <p class="card-desc">${safeDesc}</p>
           <div class="card-footer-row">
             <button type="button" class="btn-details-link" onclick="openDetailsModal(${att.id})">Details</button>
             <button type="button" class="btn-add-plan ${isAdded ? 'added' : ''}" onclick="togglePlanItem(${att.id})">
@@ -224,35 +228,47 @@ function openDetailsModal(attractionId) {
   const cat = CATEGORY_META[att.category] || { icon: '📍', color: '#333' };
   const isAdded = APP_STATE.itinerary.some(item => item.id === att.id);
 
+  const safeImg = escapeHtml(att.image_url || 'https://images.unsplash.com/photo-1546708973-b339540b5162?w=800');
+  const safeName = escapeHtml(att.name);
+  const safeCat = escapeHtml(att.category);
+  const safeDesc = escapeHtml(att.description);
+  const safeHours = escapeHtml(att.opening_time || '08:00 AM - 05:00 PM');
+  const safeLocalPrice = escapeHtml(att.price_display || 'Free');
+  const safeEmergency = escapeHtml(att.emergency_contact || 'Tourist Police Kandy: 1912');
+  const safeHistory = att.historical_context ? escapeHtml(att.historical_context) : '';
+  const safeDress = escapeHtml(att.dress_code || 'Modest casual attire recommended.');
+  const safePhoto = escapeHtml(att.photography_rules || 'Photography permitted in designated areas.');
+  const safeTips = escapeHtml(att.cultural_tips || 'Treat local traditions with care. Maintain silence in meditation areas.');
+
   document.getElementById('modal-attraction-title').textContent = att.name;
   
   // Tab 1: Overview
   document.getElementById('tab-content-overview').innerHTML = `
     <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-      <img src="${att.image_url}" alt="${att.name}" style="width: 220px; height: 160px; object-fit: cover; border-radius: 12px;">
+      <img src="${safeImg}" alt="${safeName}" style="width: 220px; height: 160px; object-fit: cover; border-radius: 12px;" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
       <div style="flex: 1; min-width: 240px;">
         <div style="margin-bottom: 0.6rem; display: flex; gap: 0.8rem; align-items: center;">
-          <span class="badge-category-float" style="position: static; color: ${cat.color};">${cat.icon} ${att.category}</span>
-          <span style="font-weight: 600; color: #1e5a32;">★ ${att.rating} Rating</span>
+          <span class="badge-category-float" style="position: static; color: ${cat.color};">${cat.icon} ${safeCat}</span>
+          <span style="font-weight: 600; color: #1e5a32;">★ ${parseFloat(att.rating || 4.5).toFixed(1)} Rating</span>
           <span style="color: #7d7265; font-size: 0.88rem;">📍 ${att.distance_km} km from Haloluwa</span>
         </div>
-        <p style="font-size: 0.92rem; color: #473e34; margin-bottom: 0.8rem; line-height: 1.5;">${att.description}</p>
+        <p style="font-size: 0.92rem; color: #473e34; margin-bottom: 0.8rem; line-height: 1.5;">${safeDesc}</p>
         <div style="font-size: 0.85rem; color: #6e6459; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
-          <div><strong>🕒 Hours:</strong> ${att.opening_time || '08:00 AM - 05:00 PM'}</div>
+          <div><strong>🕒 Hours:</strong> ${safeHours}</div>
           <div><strong>⏱️ Duration:</strong> ~${att.estimated_duration_min || 60} mins</div>
-          <div><strong>🎟️ Local:</strong> ${att.price_display || 'Free'}</div>
-          <div><strong>🎟️ Foreign:</strong> ${att.price_foreign > 0 ? `LKR ${att.price_foreign}` : 'Free'}</div>
+          <div><strong>🎟️ Local:</strong> ${safeLocalPrice}</div>
+          <div><strong>🎟️ Foreign:</strong> ${att.price_foreign > 0 ? `LKR ${parseFloat(att.price_foreign).toLocaleString()}` : 'Free'}</div>
         </div>
       </div>
     </div>
-    ${att.historical_context ? `
+    ${safeHistory ? `
       <div style="background: #FAF6EF; border: 1px solid #ebdccb; border-radius: 10px; padding: 1rem; margin-top: 1rem;">
         <h4 style="font-family: var(--font-serif); font-size: 0.95rem; margin-bottom: 0.35rem; color: #221c16;">Historical Significance</h4>
-        <p style="font-size: 0.86rem; color: #5a4f43; line-height: 1.5;">${att.historical_context}</p>
+        <p style="font-size: 0.86rem; color: #5a4f43; line-height: 1.5;">${safeHistory}</p>
       </div>
     ` : ''}
     <div style="margin-top: 1rem; font-size: 0.82rem; color: #887b6e;">
-      <strong>📞 Emergency & Assistance:</strong> ${att.emergency_contact || 'Tourist Police Kandy: 1912'}
+      <strong>📞 Emergency & Assistance:</strong> ${safeEmergency}
     </div>
   `;
 
@@ -273,7 +289,7 @@ function openDetailsModal(attractionId) {
       </div>
       <div style="background: #faf7f2; border: 1px solid #ebdccb; border-radius: 10px; padding: 1rem;">
         <div style="font-size: 1.2rem; margin-bottom: 0.3rem;">🥾 Walking Difficulty</div>
-        <p style="font-size: 0.86rem; color: #5a4f43;"><strong>${att.walking_difficulty || 'Easy'}</strong> • ${att.elderly_friendly ? 'Elderly & family friendly' : 'Moderate physical endurance recommended'}</p>
+        <p style="font-size: 0.86rem; color: #5a4f43;"><strong>${escapeHtml(att.walking_difficulty || 'Easy')}</strong> • ${att.elderly_friendly ? 'Elderly & family friendly' : 'Moderate physical endurance recommended'}</p>
       </div>
     </div>
   `;
@@ -283,15 +299,15 @@ function openDetailsModal(attractionId) {
     <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0;">
       <div style="background: #faf7f2; border: 1px solid #ebdccb; border-radius: 10px; padding: 1rem;">
         <h4 style="font-family: var(--font-serif); font-size: 0.95rem; margin-bottom: 0.3rem;">👔 Dress Code Guidelines</h4>
-        <p style="font-size: 0.86rem; color: #5a4f43;">${att.dress_code || 'Modest casual attire recommended.'}</p>
+        <p style="font-size: 0.86rem; color: #5a4f43;">${safeDress}</p>
       </div>
       <div style="background: #faf7f2; border: 1px solid #ebdccb; border-radius: 10px; padding: 1rem;">
         <h4 style="font-family: var(--font-serif); font-size: 0.95rem; margin-bottom: 0.3rem;">📷 Photography Regulations</h4>
-        <p style="font-size: 0.86rem; color: #5a4f43;">${att.photography_rules || 'Photography permitted in designated areas.'}</p>
+        <p style="font-size: 0.86rem; color: #5a4f43;">${safePhoto}</p>
       </div>
       <div style="background: #faf7f2; border: 1px solid #ebdccb; border-radius: 10px; padding: 1rem;">
         <h4 style="font-family: var(--font-serif); font-size: 0.95rem; margin-bottom: 0.3rem;">🤝 Local Etiquette & Customs</h4>
-        <p style="font-size: 0.86rem; color: #5a4f43;">${att.cultural_tips || 'Treat local traditions with care. Maintain silence in meditation areas.'}</p>
+        <p style="font-size: 0.86rem; color: #5a4f43;">${safeTips}</p>
       </div>
     </div>
   `;
@@ -565,15 +581,20 @@ function renderPlannerAddList(filterText = '') {
     const cat = CATEGORY_META[att.category] || { icon: '📍' };
     const priceTxt = att.price_display || (att.price_local > 0 ? `LKR ${att.price_local}` : 'Free');
 
+    const safeImg = escapeHtml(att.image_url || 'https://images.unsplash.com/photo-1546708973-b339540b5162?w=800');
+    const safeName = escapeHtml(att.name);
+    const safeCat = escapeHtml(att.category);
+    const safePrice = escapeHtml(priceTxt);
+
     return `
       <div class="add-attraction-card">
-        <img src="${att.image_url || 'https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'}" alt="${att.name}" class="add-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
+        <img src="${safeImg}" alt="${safeName}" class="add-card-thumb" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
         <div class="add-card-body">
-          <h4 class="add-card-name">${att.name}</h4>
+          <h4 class="add-card-name">${safeName}</h4>
           <div class="add-card-details">
             <span>${cat.icon} ${att.distance_km}km</span>
-            <span>★ ${att.rating}</span>
-            <span>${priceTxt}</span>
+            <span>★ ${parseFloat(att.rating || 4.5).toFixed(1)}</span>
+            <span>${safePrice}</span>
           </div>
         </div>
         <button type="button" class="btn-circle-add ${isAdded ? 'is-added' : ''}" onclick="togglePlanItem(${att.id})" title="${isAdded ? 'Remove from plan' : 'Add to plan'}">
@@ -612,7 +633,6 @@ function renderPlannerItinerary() {
         <p class="empty-box-text">Add attractions from the list to begin planning your perfect day.</p>
       </div>
     `;
-    updatePlannerStats(0, 0, 0);
     updatePlannerMapRoute();
     return;
   }
@@ -636,8 +656,6 @@ function renderPlannerItinerary() {
     totalMinutes += (parseInt(stop.estimated_duration_min, 10) || 60) + 20; // +20 min travel time
     totalLKR += parseFloat(stop.price_local || 0);
   });
-
-  updatePlannerStats(totalKm, totalMinutes, totalLKR);
 
   // Render Controls & Ordered Cards
   container.innerHTML = `
@@ -672,16 +690,21 @@ function renderPlannerItinerary() {
       ${APP_STATE.itinerary.map((stop, index) => {
         const cat = CATEGORY_META[stop.category] || { icon: '📍' };
         const priceTxt = stop.price_display || (stop.price_local > 0 ? `LKR ${stop.price_local}` : 'Free');
+        const safeStopImg = escapeHtml(stop.image_url || 'https://images.unsplash.com/photo-1546708973-b339540b5162?w=800');
+        const safeStopName = escapeHtml(stop.name);
+        const safeStopCat = escapeHtml(stop.category);
+        const safeStopPrice = escapeHtml(priceTxt);
+
         return `
           <div class="itinerary-stop-card">
             <div class="stop-seq-badge">${index + 1}</div>
-            <img src="${stop.image_url}" alt="${stop.name}" class="stop-img-thumb" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
+            <img src="${safeStopImg}" alt="${safeStopName}" class="stop-img-thumb" onerror="this.src='https://images.unsplash.com/photo-1546708973-b339540b5162?w=800'">
             <div class="stop-info-body">
-              <h4 class="stop-title">${stop.name}</h4>
+              <h4 class="stop-title">${safeStopName}</h4>
               <div class="stop-meta-line">
-                <span>${cat.icon} ${stop.category}</span>
+                <span>${cat.icon} ${safeStopCat}</span>
                 <span>⏱️ ~${stop.estimated_duration_min || 60}m</span>
-                <span>🎟️ ${priceTxt}</span>
+                <span>🎟️ ${safeStopPrice}</span>
               </div>
             </div>
             <div class="stop-controls-group">
@@ -701,10 +724,6 @@ function renderPlannerItinerary() {
     initPlannerMap();
     updatePlannerMapRoute();
   }, 100);
-}
-
-function updatePlannerStats(km, min, cost) {
-  // Update header or stats element if present
 }
 
 function moveStop(index, delta) {
@@ -872,4 +891,15 @@ function getFallbackAttractions() {
     { id: 11, name: 'Hanthana Mountain Range Trail', category: 'Nature', distance_km: 6.7, price_display: 'LKR 500', price_local: 500, rating: 4.6, latitude: 7.2550, longitude: 80.6280, description: 'Popular trekking range with seven mountain peaks rising above 1,200m, offering panoramic tea valley vistas, montane grasslands, and diverse avian life.', image_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800' },
     { id: 12, name: 'Dunumadalawa Forest Sanctuary', category: 'Nature', distance_km: 5.8, price_display: 'LKR 400', price_local: 400, rating: 4.5, latitude: 7.2810, longitude: 80.6470, description: 'A pristine catchment forest and reservoir area nestled between Kandy and Hantana, rich in endemic bird species, quiet trails, and rare butterflies.', image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800' }
   ];
+}
+
+// Utility: HTML Escaping for safe DOM rendering
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
