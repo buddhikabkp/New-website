@@ -100,6 +100,17 @@ async function initDatabase() {
       )
     `);
 
+    // Ensure users table exists for tourist registration & login
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(100) NOT NULL UNIQUE,
+        email VARCHAR(150) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Ensure default system administrator exists
     const [existingAdmins] = await dbPool.query('SELECT id FROM admin_users WHERE username = ?', ['admin']);
     if (existingAdmins.length === 0) {
@@ -593,6 +604,178 @@ app.delete('/api/admins/:id', async (req, res) => {
     res.json({ success: true, message: `Administrator '${target.username}' deleted successfully (fallback).` });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to delete administrator account.', error: err.message });
+  }
+});
+
+// ==========================================================================
+// 5.5 TOURIST USER AUTHENTICATION (Registration & Login)
+// ==========================================================================
+let fallbackUsers = [];
+
+// POST /api/users/register - Register a new tourist user
+app.post('/api/users/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ success: false, message: 'Username, email, and password are required.' });
+  }
+
+  const cleanUsername = username.trim().toLowerCase();
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (cleanUsername.length < 3 || cleanUsername.length > 50) {
+    return res.status(400).json({ success: false, message: 'Username must be between 3 and 50 characters.' });
+  }
+
+  if (!/^[a-zA-Z0-9_.-]+$/.test(cleanUsername)) {
+    return res.status(400).json({ success: false, message: 'Username can only contain letters, numbers, hyphens, and underscores.' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    if (dbPool) {
+      const [existing] = await dbPool.query(
+        'SELECT id, username, email FROM users WHERE LOWER(username) = ? OR LOWER(email) = ?',
+        [cleanUsername, cleanEmail]
+      );
+
+      if (existing.length > 0) {
+        const conflict = existing[0];
+        const msg = conflict.username.toLowerCase() === cleanUsername 
+          ? `Username '${cleanUsername}' is already taken.`
+          : `Email '${cleanEmail}' is already registered.`;
+        return res.status(409).json({ success: false, message: msg });
+      }
+
+      const [result] = await dbPool.execute(
+        'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+        [cleanUsername, cleanEmail, passwordHash]
+      );
+
+      const token = jwt.sign(
+        { id: result.insertId, username: cleanUsername, email: cleanEmail, role: 'user' },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: 'Account created successfully!',
+        token,
+        user: { id: result.insertId, username: cleanUsername, email: cleanEmail }
+      });
+    }
+
+    // Fallback in-memory
+    const exists = fallbackUsers.some(u => u.username === cleanUsername || u.email === cleanEmail);
+    if (exists) {
+      return res.status(409).json({ success: false, message: 'Username or email is already registered.' });
+    }
+
+    const newId = Date.now();
+    const newUser = { id: newId, username: cleanUsername, email: cleanEmail, password_hash: passwordHash };
+    fallbackUsers.push(newUser);
+
+    const token = jwt.sign(
+      { id: newId, username: cleanUsername, email: cleanEmail, role: 'user' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Account created successfully (offline mode)!',
+      token,
+      user: { id: newId, username: cleanUsername, email: cleanEmail }
+    });
+  } catch (err) {
+    console.error('[User Register Error]:', err);
+    res.status(500).json({ success: false, message: 'Registration failed.', error: err.message });
+  }
+});
+
+// POST /api/users/login - Tourist User Login
+app.post('/api/users/login', async (req, res) => {
+  const { login, password } = req.body;
+  if (!login || !password) {
+    return res.status(400).json({ success: false, message: 'Username/email and password are required.' });
+  }
+
+  const cleanLogin = login.trim().toLowerCase();
+
+  try {
+    if (dbPool) {
+      const [rows] = await dbPool.query(
+        'SELECT * FROM users WHERE LOWER(username) = ? OR LOWER(email) = ?',
+        [cleanLogin, cleanLogin]
+      );
+
+      if (rows.length > 0) {
+        const user = rows[0];
+        const match = await bcrypt.compare(password, user.password_hash);
+        if (match) {
+          const token = jwt.sign(
+            { id: user.id, username: user.username, email: user.email, role: 'user' },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+          );
+
+          return res.json({
+            success: true,
+            message: 'Login successful!',
+            token,
+            user: { id: user.id, username: user.username, email: user.email }
+          });
+        }
+      }
+    }
+
+    // Fallback in-memory check
+    const fallbackUser = fallbackUsers.find(u => u.username === cleanLogin || u.email === cleanLogin);
+    if (fallbackUser && await bcrypt.compare(password, fallbackUser.password_hash)) {
+      const token = jwt.sign(
+        { id: fallbackUser.id, username: fallbackUser.username, email: fallbackUser.email, role: 'user' },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        success: true,
+        message: 'Login successful (offline mode)!',
+        token,
+        user: { id: fallbackUser.id, username: fallbackUser.username, email: fallbackUser.email }
+      });
+    }
+
+    res.status(401).json({ success: false, message: 'Invalid username/email or password.' });
+  } catch (err) {
+    console.error('[User Login Error]:', err);
+    res.status(500).json({ success: false, message: 'Login failed.', error: err.message });
+  }
+});
+
+// GET /api/users/me - Get current logged in user details
+app.get('/api/users/me', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, message: 'Authorization token required' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    res.json({ success: true, user: { id: decoded.id, username: decoded.username, email: decoded.email } });
+  } catch (err) {
+    res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 });
 

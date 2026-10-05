@@ -17,8 +17,17 @@
        HERO SECTION (Matches Screenshot 1)
        ======================================================================== -->
   <header class="hero-wrapper">
-    <!-- Top Nav with Admin Button -->
+    <!-- Top Nav with User Auth and Admin Buttons -->
     <div class="hero-top-nav">
+      <div id="landing-user-nav">
+        <button type="button" class="user-pill-btn" id="landing-user-auth-btn" onclick="openUserAuthModal('login')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Sign In</span>
+        </button>
+      </div>
       <button type="button" class="admin-pill-btn" id="landing-admin-btn" onclick="handleAdminBtnClick()">Admin</button>
     </div>
 
@@ -31,7 +40,7 @@
       </p>
 
       <div class="hero-cta-group">
-        <a href="planner.html" class="btn-primary-pill">Plan My Day Trip &nbsp;→</a>
+        <a href="planner.html" class="btn-primary-pill" id="hero-plan-trip-btn" onclick="handlePlanMyTripClick(event)">Plan My Day Trip &nbsp;→</a>
         <a href="#attractions-section" class="btn-outline-pill">Browse Attractions</a>
       </div>
 
@@ -97,7 +106,7 @@
     <!-- Results Meta Counter -->
     <div class="results-meta-bar">
       <span class="results-count-text" id="attractions-count">12 attractions found</span>
-      <a href="planner.html" style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">
+      <a href="planner.html" id="meta-open-planner-link" onclick="handlePlanMyTripClick(event)" style="font-size: 0.88rem; font-weight: 600; color: var(--color-primary);">
         Open Itinerary Planner &nbsp;→
       </a>
     </div>
@@ -143,7 +152,7 @@
   <!-- ========================================================================
        ADMIN LOGIN MODAL (Landing Page with Blur Effect)
        ======================================================================== -->
-  <div class="modal-backdrop" id="landing-admin-modal" onclick="if(event.target === this) closeAdminLoginModal()">
+  <div class="modal-backdrop" id="landing-admin-modal" onclick="if(event.target === this) pulseModalCard(this)">
     <div class="modal-card" style="max-width: 420px;" role="dialog" aria-modal="true" aria-labelledby="landing-login-title">
       <div class="modal-header">
         <h3 class="modal-title" id="landing-login-title">Administrator Login</h3>
@@ -172,6 +181,107 @@
           <button type="submit" class="btn-primary-pill" style="padding: 0.65rem 1.4rem;">Log In</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       USER AUTH MODAL (Login & Registration with Background Blur Effect)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="user-auth-modal" onclick="if(event.target === this) pulseModalCard(this)">
+    <div class="modal-card" style="max-width: 440px;" role="dialog" aria-modal="true" aria-labelledby="user-auth-modal-title">
+      <div class="modal-header">
+        <h3 class="modal-title" id="user-auth-modal-title">Account Access</h3>
+        <button type="button" class="btn-modal-close" onclick="closeUserAuthModal()" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Tab Switcher Navigation -->
+      <div class="auth-tabs-nav" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="tab-btn-user-login" onclick="switchUserAuthTab('login')">Log In</button>
+        <button type="button" class="auth-tab-btn" id="tab-btn-user-register" onclick="switchUserAuthTab('register')">Create Account</button>
+      </div>
+
+      <!-- Context notice shown when user action was intercepted -->
+      <div id="user-auth-notice" class="auth-context-notice" style="display: none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="user-auth-notice-text">Please log in or sign up to continue.</span>
+      </div>
+
+      <!-- 1. LOGIN PANE -->
+      <div class="auth-pane" id="user-login-pane">
+        <form id="user-login-form" onsubmit="handleUserLoginForm(event)">
+          <div class="modal-body" style="padding-top: 0.85rem;">
+            <p class="auth-subtitle">
+              Sign in to customize your day trip, save stops, and explore Kandy.
+            </p>
+
+            <div id="user-login-error" class="form-error-msg" style="display: none; margin-bottom: 1rem; padding: 0.6rem; background: #fdf0ed; border: 1px solid #f5b7b1; border-radius: 6px; color: #c0392b; font-size: 0.85rem;"></div>
+            <div id="user-login-success" class="form-success-msg" style="display: none; margin-bottom: 1rem; padding: 0.6rem; background: #eef7ed; border: 1px solid #c3e6cb; border-radius: 6px; color: #2e7d32; font-size: 0.85rem;"></div>
+
+            <div class="form-group">
+              <label class="form-label" for="user-login-id">Username or Email</label>
+              <input type="text" id="user-login-id" class="form-control" placeholder="e.g. traveler or user@example.com" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="user-login-password">Password</label>
+              <input type="password" id="user-login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+
+            <div class="auth-switch-prompt">
+              <span>Don't have an account yet?</span>
+              <a href="javascript:void(0)" onclick="switchUserAuthTab('register')">Create one now</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream); padding: 0.65rem 1.2rem;" onclick="closeUserAuthModal()">Cancel</button>
+            <button type="submit" class="btn-primary-pill" id="user-login-submit-btn" style="padding: 0.65rem 1.4rem;">Log In</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 2. REGISTER PANE -->
+      <div class="auth-pane" id="user-register-pane" style="display: none;">
+        <form id="user-register-form" onsubmit="handleUserRegisterForm(event)">
+          <div class="modal-body" style="padding-top: 0.85rem;">
+            <p class="auth-subtitle">
+              Create your account to unlock your personalized Kandy day trip planner.
+            </p>
+
+            <div id="user-register-error" class="form-error-msg" style="display: none; margin-bottom: 1rem; padding: 0.6rem; background: #fdf0ed; border: 1px solid #f5b7b1; border-radius: 6px; color: #c0392b; font-size: 0.85rem;"></div>
+            <div id="user-register-success" class="form-success-msg" style="display: none; margin-bottom: 1rem; padding: 0.6rem; background: #eef7ed; border: 1px solid #c3e6cb; border-radius: 6px; color: #2e7d32; font-size: 0.85rem;"></div>
+
+            <div class="form-group">
+              <label class="form-label" for="user-register-username">Username</label>
+              <input type="text" id="user-register-username" class="form-control" placeholder="e.g. kandy_explorer" required autocomplete="username" minlength="3" maxlength="50">
+              <small class="form-hint">At least 3 characters. Letters, numbers, hyphens, and underscores.</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="user-register-email">Email Address</label>
+              <input type="email" id="user-register-email" class="form-control" placeholder="e.g. explorer@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="user-register-password">Password</label>
+              <input type="password" id="user-register-password" class="form-control" placeholder="At least 6 characters" required autocomplete="new-password" minlength="6">
+            </div>
+
+            <div class="auth-switch-prompt">
+              <span>Already registered?</span>
+              <a href="javascript:void(0)" onclick="switchUserAuthTab('login')">Log in to your account</a>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-outline-pill" style="color: var(--text-dark); border-color: var(--border-cream); padding: 0.65rem 1.2rem;" onclick="closeUserAuthModal()">Cancel</button>
+            <button type="submit" class="btn-primary-pill" id="user-register-submit-btn" style="padding: 0.65rem 1.4rem;">Create Account</button>
+          </div>
+        </form>
+      </div>
+
     </div>
   </div>
 

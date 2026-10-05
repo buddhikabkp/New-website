@@ -64,4 +64,55 @@ describe('Ceylon Journey - Backend REST API Endpoints', () => {
       expect(res.body.data).to.be.an('array').and.have.length.at.least(1);
     });
   });
+
+  it('POST /api/users/register and POST /api/users/login handle tourist authentication', () => {
+    const testUsername = `user_${Date.now()}`;
+    const testEmail = `${testUsername}@ceylontest.com`;
+    const testPassword = 'Password123!';
+
+    // Register
+    cy.request({
+      method: 'POST',
+      url: '/api/users/register',
+      body: { username: testUsername, email: testEmail, password: testPassword }
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      expect(res.body.success).to.be.true;
+      expect(res.body).to.have.property('token');
+      expect(res.body.user).to.have.property('username', testUsername);
+    });
+
+    // Login with username
+    cy.request({
+      method: 'POST',
+      url: '/api/users/login',
+      body: { login: testUsername, password: testPassword }
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      expect(res.body.success).to.be.true;
+      expect(res.body).to.have.property('token');
+    });
+
+    // Login with email
+    cy.request({
+      method: 'POST',
+      url: '/api/users/login',
+      body: { login: testEmail, password: testPassword }
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      expect(res.body.success).to.be.true;
+      expect(res.body).to.have.property('token');
+    });
+
+    // Bad password
+    cy.request({
+      method: 'POST',
+      url: '/api/users/login',
+      body: { login: testUsername, password: 'WrongPassword!' },
+      failOnStatusCode: false
+    }).then((res) => {
+      expect(res.status).to.eq(401);
+      expect(res.body.success).to.be.false;
+    });
+  });
 });

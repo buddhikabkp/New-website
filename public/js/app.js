@@ -78,6 +78,7 @@ async function fetchAttractions() {
 // LANDING PAGE LOGIC (Screenshots 1 & 2)
 // ==========================================================================
 function initLandingPage() {
+  initUserAuth();
   setupFilterListeners();
   renderAttractionsGrid();
   checkUrlParamsForAdmin();
@@ -412,6 +413,7 @@ function setupAdminKeyListeners() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeAdminLoginModal();
+      closeUserAuthModal();
       closeDetailsModal();
     }
   });
@@ -453,13 +455,26 @@ function openAdminLoginModal() {
   }, 100);
 }
 
+function pulseModalCard(backdropElem) {
+  if (!backdropElem) return;
+  const card = backdropElem.querySelector('.modal-card');
+  if (card) {
+    card.classList.remove('pulse');
+    void card.offsetWidth; // Force reflow
+    card.classList.add('pulse');
+  }
+}
+
 function closeAdminLoginModal() {
   const modal = document.getElementById('landing-admin-modal');
   if (modal) {
     modal.classList.remove('active');
   }
-  // Remove blur from landing page
-  document.body.classList.remove('landing-modal-open');
+  // Only remove blur if user auth modal is not active
+  const userModal = document.getElementById('user-auth-modal');
+  if (!userModal || !userModal.classList.contains('active')) {
+    document.body.classList.remove('landing-modal-open');
+  }
 }
 
 async function handleLandingAdminLogin(e) {
@@ -512,9 +527,351 @@ async function handleLandingAdminLogin(e) {
 }
 
 // ==========================================================================
+// TOURIST USER AUTHENTICATION & INTERCEPT MODAL
+// ==========================================================================
+let PENDING_AUTH_ACTION = null;
+
+function isUserLoggedIn() {
+  const token = localStorage.getItem('ceylon_user_token');
+  const user = localStorage.getItem('ceylon_user');
+  return !!(token && user);
+}
+
+function initUserAuth() {
+  updateUserNavHeader();
+  if (isUserLoggedIn()) {
+    verifyUserSession();
+  }
+}
+
+async function verifyUserSession() {
+  const token = localStorage.getItem('ceylon_user_token');
+  if (!token) return;
+  try {
+    const res = await fetch('/api/users/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      localStorage.removeItem('ceylon_user_token');
+      localStorage.removeItem('ceylon_user');
+      updateUserNavHeader();
+    }
+  } catch (err) {
+    // Offline mode; preserve cached session
+  }
+}
+
+function updateUserNavHeader() {
+  const navContainer = document.getElementById('landing-user-nav');
+  if (!navContainer) return;
+
+  const token = localStorage.getItem('ceylon_user_token');
+  const userRaw = localStorage.getItem('ceylon_user');
+
+  if (token && userRaw) {
+    try {
+      const user = JSON.parse(userRaw);
+      const displayName = escapeHtml(user.username || 'Traveler');
+      navContainer.innerHTML = `
+        <div class="user-logged-pill" id="user-profile-pill">
+          <span class="user-avatar-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span id="user-display-username">${displayName}</span>
+          </span>
+          <button type="button" class="btn-user-signout" id="landing-user-logout-btn" onclick="handleUserLogout()" title="Sign Out">Sign Out</button>
+        </div>
+      `;
+      return;
+    } catch (e) {
+      // JSON parse fallback
+    }
+  }
+
+  // Guest view
+  navContainer.innerHTML = `
+    <button type="button" class="user-pill-btn" id="landing-user-auth-btn" onclick="openUserAuthModal('login')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Sign In</span>
+    </button>
+  `;
+}
+
+function openUserAuthModal(tab = 'login', pendingAction = null) {
+  PENDING_AUTH_ACTION = pendingAction || null;
+
+  closeDetailsModal();
+
+  const modal = document.getElementById('user-auth-modal');
+  if (!modal) return;
+
+  // Intercept notice banner
+  const noticeElem = document.getElementById('user-auth-notice');
+  const noticeText = document.getElementById('user-auth-notice-text');
+  if (noticeElem && noticeText) {
+    if (pendingAction && pendingAction.reason) {
+      noticeText.textContent = pendingAction.reason;
+      noticeElem.style.display = 'flex';
+    } else {
+      noticeElem.style.display = 'none';
+    }
+  }
+
+  resetAuthFeedback();
+  switchUserAuthTab(tab);
+
+  // Apply background blur effect
+  document.body.classList.add('landing-modal-open');
+  modal.classList.add('active');
+
+  setTimeout(() => {
+    if (tab === 'register') {
+      const u = document.getElementById('user-register-username');
+      if (u) u.focus();
+    } else {
+      const l = document.getElementById('user-login-id');
+      if (l) l.focus();
+    }
+  }, 100);
+}
+
+function closeUserAuthModal() {
+  const modal = document.getElementById('user-auth-modal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+
+  // Remove blur if admin modal is not open
+  const adminModal = document.getElementById('landing-admin-modal');
+  if (!adminModal || !adminModal.classList.contains('active')) {
+    document.body.classList.remove('landing-modal-open');
+  }
+
+  PENDING_AUTH_ACTION = null;
+  resetAuthFeedback();
+}
+
+function switchUserAuthTab(tab) {
+  const loginTabBtn = document.getElementById('tab-btn-user-login');
+  const regTabBtn = document.getElementById('tab-btn-user-register');
+  const loginPane = document.getElementById('user-login-pane');
+  const regPane = document.getElementById('user-register-pane');
+  const modalTitle = document.getElementById('user-auth-modal-title');
+
+  resetAuthFeedback();
+
+  if (tab === 'register') {
+    if (loginTabBtn) loginTabBtn.classList.remove('active');
+    if (regTabBtn) regTabBtn.classList.add('active');
+    if (loginPane) loginPane.style.display = 'none';
+    if (regPane) regPane.style.display = 'block';
+    if (modalTitle) modalTitle.textContent = 'Create Account';
+  } else {
+    if (regTabBtn) regTabBtn.classList.remove('active');
+    if (loginTabBtn) loginTabBtn.classList.add('active');
+    if (regPane) regPane.style.display = 'none';
+    if (loginPane) loginPane.style.display = 'block';
+    if (modalTitle) modalTitle.textContent = 'Account Access';
+  }
+}
+
+function resetAuthFeedback() {
+  ['user-login-error', 'user-login-success', 'user-register-error', 'user-register-success'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'none';
+      el.textContent = '';
+    }
+  });
+}
+
+async function handleUserLoginForm(e) {
+  e.preventDefault();
+  const loginIdInput = document.getElementById('user-login-id');
+  const passwordInput = document.getElementById('user-login-password');
+  const errorDiv = document.getElementById('user-login-error');
+  const submitBtn = document.getElementById('user-login-submit-btn');
+
+  const login = loginIdInput ? loginIdInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value : '';
+
+  if (!login || !password) return;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing In...';
+  }
+
+  try {
+    const res = await fetch('/api/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login, password })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem('ceylon_user_token', data.token);
+      localStorage.setItem('ceylon_user', JSON.stringify(data.user));
+
+      // Reset older itinerary when a user logs in
+      resetItinerary();
+
+      updateUserNavHeader();
+      const action = PENDING_AUTH_ACTION;
+      closeUserAuthModal();
+
+      if (action) {
+        executePendingAction(action);
+      }
+    } else {
+      if (errorDiv) {
+        errorDiv.textContent = data.message || 'Invalid username/email or password.';
+        errorDiv.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (errorDiv) {
+      errorDiv.textContent = 'Unable to connect to server. Please try again.';
+      errorDiv.style.display = 'block';
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log In';
+    }
+  }
+}
+
+async function handleUserRegisterForm(e) {
+  e.preventDefault();
+  const usernameInput = document.getElementById('user-register-username');
+  const emailInput = document.getElementById('user-register-email');
+  const passwordInput = document.getElementById('user-register-password');
+  const errorDiv = document.getElementById('user-register-error');
+  const submitBtn = document.getElementById('user-register-submit-btn');
+
+  const username = usernameInput ? usernameInput.value.trim() : '';
+  const email = emailInput ? emailInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value : '';
+
+  if (!username || !email || !password) return;
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating Account...';
+  }
+
+  try {
+    const res = await fetch('/api/users/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      localStorage.setItem('ceylon_user_token', data.token);
+      localStorage.setItem('ceylon_user', JSON.stringify(data.user));
+
+      // Reset older itinerary when a new user registers
+      resetItinerary();
+
+      updateUserNavHeader();
+      const action = PENDING_AUTH_ACTION;
+      closeUserAuthModal();
+
+      if (action) {
+        executePendingAction(action);
+      }
+    } else {
+      if (errorDiv) {
+        errorDiv.textContent = data.message || 'Failed to create account.';
+        errorDiv.style.display = 'block';
+      }
+    }
+  } catch (err) {
+    if (errorDiv) {
+      errorDiv.textContent = 'Unable to connect to server. Please try again.';
+      errorDiv.style.display = 'block';
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account';
+    }
+  }
+}
+
+function handleUserLogout() {
+  localStorage.removeItem('ceylon_user_token');
+  localStorage.removeItem('ceylon_user');
+  resetItinerary();
+  updateUserNavHeader();
+}
+
+function resetItinerary() {
+  APP_STATE.itinerary = [];
+  saveItinerary();
+  renderAttractionsGrid();
+  if (document.getElementById('itinerary-stops-container')) {
+    renderPlannerItinerary();
+    renderPlannerAddList();
+    if (typeof updatePlannerMapRoute === 'function') {
+      updatePlannerMapRoute();
+    }
+  }
+}
+
+function handlePlanMyTripClick(e) {
+  if (!isUserLoggedIn()) {
+    if (e && e.preventDefault) e.preventDefault();
+    openUserAuthModal('login', {
+      type: 'navigate',
+      url: 'planner.html',
+      reason: 'Please sign in or create an account to start planning your day trip.'
+    });
+    return false;
+  }
+  return true;
+}
+
+function executePendingAction(action) {
+  if (!action) return;
+  if (action.type === 'navigate' && action.url) {
+    window.location.href = action.url;
+  } else if (action.type === 'add_attraction' && action.id) {
+    const att = APP_STATE.attractions.find(a => a.id === action.id);
+    if (att) {
+      const idx = APP_STATE.itinerary.findIndex(item => item.id === action.id);
+      if (idx === -1) {
+        APP_STATE.itinerary.push(att);
+        saveItinerary();
+        renderAttractionsGrid();
+      }
+    }
+  }
+}
+
+// ==========================================================================
 // ITINERARY MANAGEMENT (Local State & Sync)
 // ==========================================================================
 function togglePlanItem(attractionId) {
+  const isLandingPage = document.getElementById('attractions-grid') !== null;
+  if (isLandingPage && !isUserLoggedIn()) {
+    openUserAuthModal('login', {
+      type: 'add_attraction',
+      id: attractionId,
+      reason: 'Please sign in or create an account to add attractions to your itinerary.'
+    });
+    return;
+  }
+
   const att = APP_STATE.attractions.find(a => a.id === attractionId);
   if (!att) return;
 
