@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1260" height="1520" viewBox="0 0 1260 1520" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#0284C7"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#EA580C"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1260" height="1520" fill="#FAF9F6"/>
+
+  <!-- Diagram Title Header -->
+  <g transform="translate(40, 30)">
+    <text x="0" y="0" font-size="22" font-weight="700" fill="#1E293B">Admin — Manage an Attraction (Swimlane Activity Diagram)</text>
+    <text x="0" y="24" font-size="13" fill="#64748B">100% faithful recreation of Admin Workflow • Partitions: Administrator, Frontend UI &amp; Backend API</text>
+  </g>
+
+  <!-- ========================================================================
+       SWIMLANE COLUMNS (3 PARTITIONS)
+       Lane 1: Administrator (x = 40, width = 380)
+       Lane 2: Frontend UI (x = 440, width = 420)
+       Lane 3: Backend API (x = 880, width = 340)
+       ======================================================================== -->
+
+  <!-- Lane 1 Header & Body -->
+  <g id="lane-admin">
+    <rect x="40" y="75" width="380" height="42" fill="#FFEDD5" stroke="#FED7AA" stroke-width="1.5"/>
+    <text x="230" y="102" font-size="14" font-weight="700" fill="#9A3412" text-anchor="middle">👤 Administrator (Actor)</text>
+    <rect x="40" y="117" width="380" height="1360" fill="#FFFDFB" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- Lane 2 Header & Body -->
+  <g id="lane-frontend">
+    <rect x="440" y="75" width="420" height="42" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="1.5"/>
+    <text x="650" y="102" font-size="14" font-weight="700" fill="#0369A1" text-anchor="middle">🖥️ Frontend UI (Admin Portal &amp; LocalStorage)</text>
+    <rect x="440" y="117" width="420" height="1360" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- Lane 3 Header & Body -->
+  <g id="lane-backend">
+    <rect x="880" y="75" width="340" height="42" fill="#D1FAE5" stroke="#A7F3D0" stroke-width="1.5"/>
+    <text x="1050" y="102" font-size="14" font-weight="700" fill="#065F46" text-anchor="middle">⚙️ Backend API (Express &amp; Database)</text>
+    <rect x="880" y="117" width="340" height="1360" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- ========================================================================
+       WORKFLOW NODES
+       ======================================================================== -->
+
+  <!-- START NODE (Lane 1) -->
+  <circle cx="230" cy="155" r="14" fill="#0F172A"/>
+  <circle cx="230" cy="155" r="10" fill="#1E293B"/>
+  <text x="230" y="159" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">Start</text>
+
+  <!-- Action: Open admin portal (Lane 1) -->
+  <g transform="translate(130, 195)">
+    <rect width="200" height="44" rx="8" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="100" y="27" font-size="12.5" font-weight="600" fill="#7C2D12" text-anchor="middle">Open admin portal</text>
+  </g>
+
+  <!-- Decision: Valid token in localStorage? (Lane 2) -->
+  <g transform="translate(565, 182)">
+    <polygon points="85,0 170,35 85,70 0,35" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="85" y="32" font-size="11.5" font-weight="700" fill="#78350F" text-anchor="middle">Valid token in</text>
+    <text x="85" y="47" font-size="11.5" font-weight="700" fill="#78350F" text-anchor="middle">localStorage?</text>
+  </g>
+
+  <!-- Action: Enter username and password (Lane 1) -->
+  <g transform="translate(115, 305)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="115" y="24" font-size="12" font-weight="600" fill="#7C2D12" text-anchor="middle">Enter username and</text>
+    <text x="115" y="39" font-size="12" font-weight="600" fill="#7C2D12" text-anchor="middle">password</text>
+  </g>
+
+  <!-- Action: POST /api/auth/login (Lane 3) -->
+  <g transform="translate(935, 305)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="115" y="28" font-size="12" font-weight="600" fill="#064E3B" text-anchor="middle">POST /api/auth/login</text>
+  </g>
+
+  <!-- Decision: Success? (Lane 3) -->
+  <g transform="translate(1015, 395)">
+    <polygon points="35,0 70,26 35,52 0,26" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="35" y="30" font-size="11" font-weight="700" fill="#78350F" text-anchor="middle">Success?</text>
+  </g>
+
+  <!-- Action: Load dashboard: KPIs and attractions table (Lane 2) -->
+  <g transform="translate(535, 490)">
+    <rect width="230" height="50" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="115" y="22" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">Load dashboard: KPIs and</text>
+    <text x="115" y="38" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">attractions table</text>
+  </g>
+
+  <!-- Decision: Action (Lane 1) -->
+  <g transform="translate(200, 580)">
+    <polygon points="30,0 60,24 30,48 0,24" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="30" y="28" font-size="11" font-weight="700" fill="#78350F" text-anchor="middle">Action</text>
+  </g>
+
+  <!-- ========================================================================
+       BRANCH 1: ADD / EDIT ATTRACTION
+       ======================================================================== -->
+  <!-- Action: Fill attraction form, optional image upload (Lane 1) -->
+  <g transform="translate(115, 680)">
+    <rect width="230" height="48" rx="8" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="115" y="21" font-size="12" font-weight="600" fill="#7C2D12" text-anchor="middle">Fill attraction form,</text>
+    <text x="115" y="37" font-size="11.5" font-weight="600" fill="#7C2D12" text-anchor="middle">optional image upload</text>
+  </g>
+
+  <!-- Decision: Name, description, GPS present and distance 0 to 25 km? (Lane 2) -->
+  <g transform="translate(540, 770)">
+    <polygon points="110,0 220,45 110,90 0,45" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="110" y="33" font-size="11" font-weight="700" fill="#78350F" text-anchor="middle">Name, description, GPS</text>
+    <text x="110" y="48" font-size="11" font-weight="700" fill="#78350F" text-anchor="middle">present and distance 0 to</text>
+    <text x="110" y="63" font-size="11" font-weight="700" fill="#78350F" text-anchor="middle">25 km?</text>
+  </g>
+
+  <!-- Action: Show validation error (Lane 2) -->
+  <g transform="translate(565, 900)">
+    <rect width="170" height="40" rx="8" fill="#FEE2E2" stroke="#EF4444" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="85" y="25" font-size="11.5" font-weight="600" fill="#991B1B" text-anchor="middle">Show validation error</text>
+  </g>
+
+  <!-- Action: POST or PUT /api/attractions with Bearer token (Lane 3) -->
+  <g transform="translate(930, 885)">
+    <rect width="240" height="52" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="120" y="23" font-size="12" font-weight="600" fill="#064E3B" text-anchor="middle">POST or PUT</text>
+    <text x="120" y="39" font-size="11" font-weight="600" fill="#064E3B" text-anchor="middle">/api/attractions with Bearer token</text>
+  </g>
+
+  <!-- ========================================================================
+       BRANCH 2: DELETE ATTRACTION
+       ======================================================================== -->
+  <!-- Decision: Confirm delete? (Lane 1) -->
+  <g transform="translate(195, 870)">
+    <polygon points="35,0 70,28 35,56 0,28" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="35" y="25" font-size="10.5" font-weight="700" fill="#78350F" text-anchor="middle">Confirm</text>
+    <text x="35" y="38" font-size="10.5" font-weight="700" fill="#78350F" text-anchor="middle">delete?</text>
+  </g>
+
+  <!-- Action: DELETE /api/attractions/:id (Lane 3) -->
+  <g transform="translate(930, 990)">
+    <rect width="240" height="46" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="120" y="28" font-size="12" font-weight="600" fill="#064E3B" text-anchor="middle">DELETE /api/attractions/:id</text>
+  </g>
+
+  <!-- ========================================================================
+       BRANCH 3: MANAGE ADMINS
+       ======================================================================== -->
+  <!-- Action: Open admins modal: create / edit / delete admin (Lane 1) -->
+  <g transform="translate(115, 1070)">
+    <rect width="230" height="50" rx="8" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="115" y="22" font-size="11.5" font-weight="600" fill="#7C2D12" text-anchor="middle">Open admins modal: create</text>
+    <text x="115" y="38" font-size="11.5" font-weight="600" fill="#7C2D12" text-anchor="middle">/ edit / delete admin</text>
+  </g>
+
+  <!-- ========================================================================
+       BRANCH 4: LOGOUT
+       ======================================================================== -->
+  <!-- Action: Logout: clear tokens (Lane 2) -->
+  <g transform="translate(565, 605)">
+    <rect width="170" height="44" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="85" y="27" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">Logout: clear tokens</text>
+  </g>
+
+  <!-- END NODE (Lane 2) -->
+  <circle cx="650" cy="700" r="14" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+  <circle cx="650" cy="700" r="9" fill="#0F172A"/>
+  <text x="650" y="704" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">End</text>
+
+  <!-- COMMON ACTION: Reload table (Lane 2) -->
+  <g transform="translate(565, 1200)">
+    <rect width="170" height="44" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="85" y="27" font-size="12.5" font-weight="600" fill="#0C4A6E" text-anchor="middle">Reload table</text>
+  </g>
+
+  <!-- ========================================================================
+       CONNECTING FLOW ARROWS
+       ======================================================================== -->
+
+  <!-- Start -> Open admin portal -->
+  <path d="M230,169 L230,195" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Open admin portal -> Valid token in localStorage? (Lane 1 -> Lane 2) -->
+  <path d="M330,217 L565,217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Valid token? = No -> Enter username and password (Lane 2 -> Lane 1) -->
+  <path d="M650,252 L650,285 L230,285 L230,305" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="656" y="270" font-size="11" font-weight="700" fill="#DC2626">No</text>
+
+  <!-- Enter username and password -> POST /api/auth/login (Lane 1 -> Lane 3) -->
+  <path d="M345,328 L935,328" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- POST /api/auth/login -> Success? (Lane 3) -->
+  <path d="M1050,351 L1050,395" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Success? = No -> Loop back to Enter username and password (Lane 3 -> Lane 1) -->
+  <path d="M1015,421 L965,421 L965,345 L345,345" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="975" y="415" font-size="11" font-weight="700" fill="#DC2626">No</text>
+
+  <!-- Success? = Yes -> Load dashboard (Lane 3 -> Lane 2) -->
+  <path d="M1050,447 L1050,515 L765,515" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="1058" y="470" font-size="11" font-weight="700" fill="#059669">Yes</text>
+
+  <!-- Valid token? = Yes -> Load dashboard (Lane 2 direct skip) -->
+  <path d="M735,217 L800,217 L800,470 L650,470 L650,490" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="745" y="210" font-size="11" font-weight="700" fill="#059669">Yes</text>
+
+  <!-- Load dashboard -> Decision: Action (Lane 2 -> Lane 1) -->
+  <path d="M650,540 L650,565 L230,565 L230,580" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Action = Add / Edit -> Fill attraction form (Lane 1) -->
+  <path d="M215,628 L215,650 L230,650 L230,680" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="155" y="650" font-size="11" font-weight="700" fill="#EA580C">Add / Edit</text>
+
+  <!-- Fill attraction form -> Validate 0-25km (Lane 1 -> Lane 2) -->
+  <path d="M345,704 L650,704 L650,770" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Validate? = No -> Show validation error (Lane 2) -->
+  <path d="M650,860 L650,900" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="656" y="885" font-size="11" font-weight="700" fill="#DC2626">No</text>
+
+  <!-- Show validation error -> Loop back to Fill form (Lane 2 -> Lane 1) -->
+  <path d="M565,920 L300,920 L300,728" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- Validate? = Yes -> POST or PUT /api/attractions (Lane 2 -> Lane 3) -->
+  <path d="M760,815 L1050,815 L1050,885" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="770" y="808" font-size="11" font-weight="700" fill="#059669">Yes</text>
+
+  <!-- POST/PUT -> Reload table (Lane 3 -> Lane 2) -->
+  <path d="M1050,937 L1050,1160 L680,1160 L680,1200" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Action = Delete -> Confirm delete? (Lane 1) -->
+  <path d="M230,628 L230,870" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="238" y="760" font-size="11" font-weight="700" fill="#DC2626">Delete</text>
+
+  <!-- Confirm delete? = No -> Loop back to Load dashboard (Lane 1 -> Lane 2) -->
+  <path d="M265,898 L510,898 L510,515 L535,515" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="320" y="890" font-size="11" font-weight="700" fill="#DC2626">No</text>
+
+  <!-- Confirm delete? = Yes -> DELETE /api/attractions/:id (Lane 1 -> Lane 3) -->
+  <path d="M230,926 L230,1013 L930,1013" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="238" y="960" font-size="11" font-weight="700" fill="#059669">Yes</text>
+
+  <!-- DELETE /api/attractions/:id -> Reload table (Lane 3 -> Lane 2) -->
+  <path d="M1050,1036 L1050,1160" fill="none" stroke="#475569" stroke-width="2"/>
+
+  <!-- Action = Manage admins -> Open admins modal (Lane 1) -->
+  <path d="M200,604 L75,604 L75,1095 L115,1095" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="82" y="625" font-size="11" font-weight="700" fill="#4F46E5">Manage admins</text>
+
+  <!-- Open admins modal -> Reload table (Lane 1 -> Lane 2) -->
+  <path d="M345,1095 L620,1095 L620,1200" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Action = Logout -> Logout: clear tokens (Lane 1 -> Lane 2) -->
+  <path d="M260,604 L565,627" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="380" y="605" font-size="11" font-weight="700" fill="#64748B">Logout</text>
+
+  <!-- Logout -> End (Lane 2) -->
+  <path d="M650,649 L650,686" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Reload table -> Load dashboard (Lane 2 Loop Back) -->
+  <path d="M565,1222 L470,1222 L470,515 L535,515" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+</svg>

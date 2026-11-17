@@ -1,7 +1,6 @@
 /**
  * Ceylon Journey - Admin Portal Logic
  * Controls Admin Table, CRUD modals, KPI metrics, and Authentication
- * Matches Screenshot 4
  */
 
 const ADMIN_STATE = {

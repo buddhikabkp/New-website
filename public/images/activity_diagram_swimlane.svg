@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1420" height="1580" viewBox="0 0 1420 1580" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <!-- Shadows -->
+    <filter id="nodeShadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+    
+    <!-- Arrow marker -->
+    <marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#475569"/>
+    </marker>
+    <marker id="flowArrowPrimary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#0284C7"/>
+    </marker>
+    <marker id="flowArrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#059669"/>
+    </marker>
+    <marker id="flowArrowPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1,2 L9,5 L1,8 z" fill="#7C3AED"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1420" height="1580" fill="#FAF9F6"/>
+
+  <!-- Diagram Header -->
+  <g transform="translate(40, 30)">
+    <text x="0" y="0" font-size="22" font-weight="700" fill="#1E293B">Ceylon Journey — Swimlane Activity Diagram</text>
+    <text x="0" y="24" font-size="13" fill="#64748B">Core Process: Single-Day Itinerary Planning, TSP Nearest-Neighbor Route Optimization &amp; Export • 4 Swimlanes</text>
+  </g>
+
+  <!-- ========================================================================
+       SWIMLANE COLUMNS (4 PARTITIONS)
+       Positions:
+       Lane 1 (Tourist): x = 40, width = 320
+       Lane 2 (Web Interface): x = 360, width = 340
+       Lane 3 (Application Controller): x = 700, width = 350
+       Lane 4 (Routing & GIS Engine): x = 1050, width = 330
+       Header Y: 75, Height: 45
+       Body Y: 120, Height: 1420
+       ======================================================================== -->
+
+  <!-- Lane 1: Tourist -->
+  <g id="lane-tourist">
+    <rect x="40" y="75" width="320" height="42" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="1.5"/>
+    <text x="200" y="102" font-size="14" font-weight="700" fill="#0369A1" text-anchor="middle">👤 Tourist (Guest / Registered)</text>
+    <rect x="40" y="117" width="320" height="1420" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- Lane 2: Web Interface -->
+  <g id="lane-ui">
+    <rect x="360" y="75" width="340" height="42" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1.5"/>
+    <text x="530" y="102" font-size="14" font-weight="700" fill="#92400E" text-anchor="middle">🖥️ Web Interface (UI / DOM)</text>
+    <rect x="360" y="117" width="340" height="1420" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- Lane 3: Application Controller -->
+  <g id="lane-app">
+    <rect x="700" y="75" width="350" height="42" fill="#D1FAE5" stroke="#A7F3D0" stroke-width="1.5"/>
+    <text x="875" y="102" font-size="14" font-weight="700" fill="#065F46" text-anchor="middle">⚙️ App Controller (app.js &amp; Storage)</text>
+    <rect x="700" y="117" width="350" height="1420" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- Lane 4: Routing & GIS Engine -->
+  <g id="lane-gis">
+    <rect x="1050" y="75" width="330" height="42" fill="#EDE9FE" stroke="#DDD6FE" stroke-width="1.5"/>
+    <text x="1215" y="102" font-size="14" font-weight="700" fill="#5B21B6" text-anchor="middle">🗺️ Routing &amp; GIS Engine (TSP &amp; Map)</text>
+    <rect x="1050" y="117" width="330" height="1420" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  </g>
+
+  <!-- ========================================================================
+       WORKFLOW NODES & FLOWS
+       ======================================================================== -->
+
+  <!-- STEP 1: START PLANNING -->
+  <!-- Initial Node in Lane 1 -->
+  <circle cx="200" cy="155" r="14" fill="#0F172A"/>
+  <circle cx="200" cy="155" r="10" fill="#1E293B"/>
+
+  <!-- Flow: Start -> Action Open Landing -->
+  <path d="M200,169 L200,195" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Open Landing Page (Lane 1) -->
+  <g transform="translate(85, 195)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="24" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">Open Ceylon Journey</text>
+    <text x="115" y="38" font-size="10.5" fill="#64748B" text-anchor="middle">Landing Page (index.html)</text>
+  </g>
+
+  <!-- Flow: Open -> Render Directory (Lane 1 -> Lane 2) -->
+  <path d="M315,218 L415,218" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Render Catalogue (Lane 2) -->
+  <g transform="translate(415, 195)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="24" font-size="12" font-weight="600" fill="#78350F" text-anchor="middle">Render Attractions Directory</text>
+    <text x="115" y="38" font-size="10.5" fill="#64748B" text-anchor="middle">Grid (≤ 25km of Haloluwa)</text>
+  </g>
+
+  <!-- Flow: Render -> Decision Filter (Lane 2 -> Lane 1) -->
+  <path d="M530,241 L530,270 L200,270 L200,290" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Decision 1: Filter or Search? (Lane 1) -->
+  <g transform="translate(165, 290)">
+    <polygon points="35,0 70,25 35,50 0,25" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="35" y="23" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Filter /</text>
+    <text x="35" y="35" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Search?</text>
+  </g>
+
+  <!-- Branch: Filter = Yes -> Select Filters (Lane 1) -->
+  <path d="M235,315 L260,315 L260,365 L200,365 L200,380" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="245" y="310" font-size="10.5" font-weight="700" fill="#0284C7">[Yes]</text>
+
+  <!-- Action: Select Filter (Lane 1) -->
+  <g transform="translate(85, 380)">
+    <rect width="230" height="48" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="11.5" font-weight="600" fill="#0C4A6E" text-anchor="middle">Select Category, Slider (≤25km),</text>
+    <text x="115" y="38" font-size="11" fill="#64748B" text-anchor="middle">or Search Keyword</text>
+  </g>
+
+  <!-- Flow: Select Filter -> Apply Filter (Lane 1 -> Lane 3) -->
+  <path d="M315,404 L760,404" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Apply Filters in State (Lane 3) -->
+  <g transform="translate(760, 380)">
+    <rect width="230" height="48" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="11.5" font-weight="600" fill="#064E3B" text-anchor="middle">applyFilters(): Filter Array &amp;</text>
+    <text x="115" y="38" font-size="11" fill="#64748B" text-anchor="middle">Sort (Nearest / Rating / Alpha)</text>
+  </g>
+
+  <!-- Flow: Apply -> Re-render Grid (Lane 3 -> Lane 2) -->
+  <path d="M760,415 L645,415" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Re-render Grid (Lane 2) -->
+  <g transform="translate(415, 395)">
+    <rect width="230" height="44" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="11.5" font-weight="600" fill="#78350F" text-anchor="middle">Update Attractions Grid &amp;</text>
+    <text x="115" y="36" font-size="11" fill="#64748B" text-anchor="middle">Results Counter Badge</text>
+  </g>
+
+  <!-- Branch: Filter = No (Decision 1 -> Decision 2) -->
+  <path d="M165,315 L70,315 L70,470 L200,470 L200,490" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="80" y="310" font-size="10.5" font-weight="700" fill="#64748B">[No]</text>
+  <!-- Loop back from Re-render Grid to Decision 2 -->
+  <path d="M415,417 L340,417 L340,470 L200,470" fill="none" stroke="#475569" stroke-width="2"/>
+
+  <!-- Decision 2: Inspect Details? (Lane 1) -->
+  <g transform="translate(165, 490)">
+    <polygon points="35,0 70,25 35,50 0,25" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="35" y="23" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Inspect</text>
+    <text x="35" y="35" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Details?</text>
+  </g>
+
+  <!-- Branch: Inspect = Yes -> Open Modal (Lane 1 -> Lane 2) -->
+  <path d="M235,515 L415,515" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="250" y="508" font-size="10.5" font-weight="700" fill="#0284C7">[Yes]</text>
+
+  <!-- Action: Open Multi-Tab Modal (Lane 2) -->
+  <g transform="translate(415, 492)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#78350F" text-anchor="middle">Display Multi-Tab Modal:</text>
+    <text x="115" y="36" font-size="10.5" fill="#64748B" text-anchor="middle">Overview, Facilities, Tips, Map</text>
+  </g>
+
+  <!-- Flow: Modal -> Add to Plan (Lane 2 -> Lane 1) -->
+  <path d="M530,538 L530,580 L200,580 L200,600" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Branch: Inspect = No -> Direct Add (Lane 1) -->
+  <path d="M165,515 L70,515 L70,580 L200,580" fill="none" stroke="#475569" stroke-width="2"/>
+  <text x="80" y="510" font-size="10.5" font-weight="700" fill="#64748B">[No]</text>
+
+  <!-- Action: Click Add to Plan (Lane 1) -->
+  <g transform="translate(85, 600)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">Click "+ Add to Plan" or</text>
+    <text x="115" y="38" font-size="11" fill="#64748B" text-anchor="middle">"Plan My Day Trip →"</text>
+  </g>
+
+  <!-- Flow: Click Add -> Verify Auth (Lane 1 -> Lane 3) -->
+  <path d="M315,623 L760,623" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Verify Auth Session (Lane 3) -->
+  <g transform="translate(760, 600)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="12" font-weight="600" fill="#064E3B" text-anchor="middle">Check isUserLoggedIn() &amp;</text>
+    <text x="115" y="38" font-size="11" fill="#64748B" text-anchor="middle">Session Token in LocalStorage</text>
+  </g>
+
+  <!-- Flow: Verify Auth -> Decision Auth (Lane 3) -->
+  <path d="M875,646 L875,670" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Decision 3: Logged In? (Lane 3) -->
+  <g transform="translate(840, 670)">
+    <polygon points="35,0 70,25 35,50 0,25" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="35" y="23" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Tourist</text>
+    <text x="35" y="35" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Logged In?</text>
+  </g>
+
+  <!-- Branch: Logged In = No -> Prompt Modal (Lane 3 -> Lane 2) -->
+  <path d="M840,695 L645,695" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="730" y="688" font-size="10.5" font-weight="700" fill="#DC2626">[No]</text>
+
+  <!-- Action: Open Auth Modal (Lane 2) -->
+  <g transform="translate(415, 672)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#78350F" text-anchor="middle">Display User Auth Modal</text>
+    <text x="115" y="36" font-size="10.5" fill="#64748B" text-anchor="middle">(Login / Create Account Tabs)</text>
+  </g>
+
+  <!-- Flow: Open Modal -> Submit Credentials (Lane 2 -> Lane 1) -->
+  <path d="M415,695 L315,695" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Enter & Submit Credentials (Lane 1) -->
+  <g transform="translate(85, 672)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#0C4A6E" text-anchor="middle">Enter Username &amp; Password</text>
+    <text x="115" y="36" font-size="10.5" fill="#64748B" text-anchor="middle">Click "Sign In" or "Create Account"</text>
+  </g>
+
+  <!-- Flow: Submit -> Authenticate in App (Lane 1 -> Lane 3) -->
+  <path d="M200,718 L200,750 L760,750" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Authenticate & Store Token (Lane 3) -->
+  <g transform="translate(760, 727)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#064E3B" text-anchor="middle">Authenticate via API, Store Token</text>
+    <text x="115" y="36" font-size="10.5" fill="#64748B" text-anchor="middle">&amp; Resume Pending Plan Action</text>
+  </g>
+
+  <!-- Flow from Auth success back to Decision 3 merge -->
+  <path d="M875,773 L875,800" fill="none" stroke="#475569" stroke-width="2"/>
+  <!-- Branch: Logged In = Yes -->
+  <path d="M910,695 L950,695 L950,800 L875,800" fill="none" stroke="#475569" stroke-width="2"/>
+  <text x="918" y="688" font-size="10.5" font-weight="700" fill="#059669">[Yes]</text>
+
+  <!-- Flow: Auth Confirmed -> Update Itinerary State (Lane 3) -->
+  <path d="M875,800 L875,820" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Update Itinerary State (Lane 3) -->
+  <g transform="translate(760, 820)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#064E3B" text-anchor="middle">Append Stop to itinerary[]</text>
+    <text x="115" y="36" font-size="10.5" fill="#64748B" text-anchor="middle">Save to localStorage ('ceylon_journey...')</text>
+  </g>
+
+  <!-- Flow: Update State -> Compute Metrics (Lane 3) -->
+  <path d="M875,866 L875,890" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Compute Cumulative Metrics (Lane 3) -->
+  <g transform="translate(760, 890)">
+    <rect width="230" height="50" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="18" font-size="11" font-weight="600" fill="#064E3B" text-anchor="middle">Compute Metrics from Haloluwa 0km:</text>
+    <text x="115" y="33" font-size="10.5" fill="#64748B" text-anchor="middle">Cumulative Haversine Distance (km),</text>
+    <text x="115" y="46" font-size="10.5" fill="#64748B" text-anchor="middle">Duration (+20m transit), Total LKR</text>
+  </g>
+
+  <!-- Flow: Compute Metrics -> Update Map (Lane 3 -> Lane 4) -->
+  <path d="M990,915 L1100,915" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Update Map Markers & Route (Lane 4) -->
+  <g transform="translate(1100, 890)">
+    <rect width="230" height="50" rx="8" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="18" font-size="11.5" font-weight="600" fill="#5B21B6" text-anchor="middle">Leaflet Engine: Plot Haloluwa Pin,</text>
+    <text x="115" y="33" font-size="10.5" fill="#64748B" text-anchor="middle">Numbered Stop Pins (1, 2, 3...)</text>
+    <text x="115" y="46" font-size="10.5" fill="#64748B" text-anchor="middle">&amp; Connect Polyline Route</text>
+  </g>
+
+  <!-- Flow: Update Map -> Render Planner UI (Lane 4 -> Lane 2) -->
+  <path d="M1215,940 L1215,975 L530,975 L530,995" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Render Planner Page (Lane 2) -->
+  <g transform="translate(415, 995)">
+    <rect width="230" height="48" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#78350F" text-anchor="middle">Render Two-Column Planner UI:</text>
+    <text x="115" y="34" font-size="10.5" fill="#64748B" text-anchor="middle">Stats Banner, Sequential Cards &amp;</text>
+    <text x="115" y="45" font-size="10" fill="#64748B" text-anchor="middle">Add Nearby Attractions List</text>
+  </g>
+
+  <!-- Flow: Render UI -> Action Decision (Lane 2 -> Lane 1) -->
+  <path d="M415,1019 L200,1019 L200,1050" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Decision 4: Choose Planner Action (Lane 1) -->
+  <g transform="translate(165, 1050)">
+    <polygon points="35,0 70,25 35,50 0,25" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="35" y="23" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Choose</text>
+    <text x="35" y="35" font-size="10" font-weight="700" fill="#78350F" text-anchor="middle">Action?</text>
+  </g>
+
+  <!-- ========================================================================
+       PLANNER ACTION BRANCHES
+       Branch A: Reorder / Remove Stop
+       Branch B: Optimize Route (TSP)
+       Branch C: Print / Export
+       Branch D: Clear All
+       ======================================================================== -->
+
+  <!-- BRANCH A: Reorder / Remove Stop -->
+  <path d="M165,1075 L85,1075 L85,1130" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="95" y="1068" font-size="10" font-weight="700" fill="#64748B">[Reorder / Delete]</text>
+
+  <!-- Action: Reorder / Delete Stop (Lane 1) -->
+  <g transform="translate(45, 1130)">
+    <rect width="190" height="44" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="95" y="20" font-size="11" font-weight="600" fill="#0C4A6E" text-anchor="middle">Click Move Up / Down</text>
+    <text x="95" y="34" font-size="10" fill="#64748B" text-anchor="middle">or Remove (✕) on Card</text>
+  </g>
+
+  <!-- Flow: Reorder -> Update App State (Lane 1 -> Lane 3) -->
+  <path d="M235,1152 L760,1152" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Update Stop Positions (Lane 3) -->
+  <g transform="translate(760, 1130)">
+    <rect width="230" height="44" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11" font-weight="600" fill="#064E3B" text-anchor="middle">moveStop() / removeStop():</text>
+    <text x="115" y="34" font-size="10" fill="#64748B" text-anchor="middle">Splice Array &amp; Save LocalStorage</text>
+  </g>
+
+  <!-- Loop back to recalculate metrics -->
+  <path d="M875,1130 L875,940" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#flowArrow)"/>
+
+  <!-- BRANCH B: Optimize Route (TSP) -->
+  <path d="M235,1075 L285,1075 L285,1230 L200,1230 L200,1250" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="240" y="1068" font-size="10" font-weight="700" fill="#7C3AED">[⚡ Optimize]</text>
+
+  <!-- Action: Click Optimize Route (Lane 1) -->
+  <g transform="translate(85, 1250)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">Click "⚡ Optimize Route"</text>
+    <text x="115" y="38" font-size="10.5" fill="#64748B" text-anchor="middle">Toolbar Action Button</text>
+  </g>
+
+  <!-- Flow: Click Optimize -> Execute TSP Algorithm (Lane 1 -> Lane 4) -->
+  <path d="M315,1273 L1100,1273" fill="none" stroke="#7C3AED" stroke-width="2" marker-end="url(#flowArrowPurple)"/>
+
+  <!-- Action: Execute Greedy TSP Heuristic (Lane 4) -->
+  <g transform="translate(1100, 1245)">
+    <rect width="230" height="64" rx="8" fill="#FFFFFF" stroke="#7C3AED" stroke-width="1.8" filter="url(#nodeShadow)"/>
+    <text x="115" y="18" font-size="11.5" font-weight="700" fill="#5B21B6" text-anchor="middle">optimizeItineraryRoute()</text>
+    <text x="115" y="32" font-size="10.5" fill="#64748B" text-anchor="middle">1. Anchor: Haloluwa (7.3069, 80.6095)</text>
+    <text x="115" y="45" font-size="10.5" fill="#64748B" text-anchor="middle">2. Greedily pick nearest unvisited stop</text>
+    <text x="115" y="58" font-size="10.5" fill="#64748B" text-anchor="middle">3. Repeat until all stops sequenced</text>
+  </g>
+
+  <!-- Flow: TSP -> Save & Update (Lane 4 -> Lane 3) -->
+  <path d="M1100,1290 L990,1290" fill="none" stroke="#7C3AED" stroke-width="2" marker-end="url(#flowArrowPurple)"/>
+
+  <!-- Action: Assign Sorted Stops (Lane 3) -->
+  <g transform="translate(760, 1265)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11" font-weight="600" fill="#064E3B" text-anchor="middle">itinerary = optimizedStops</text>
+    <text x="115" y="36" font-size="10" fill="#64748B" text-anchor="middle">saveItinerary(): Persist LocalStorage</text>
+  </g>
+
+  <!-- Flow from TSP save back to recalculate metrics -->
+  <path d="M875,1265 L875,1174" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#flowArrow)"/>
+
+  <!-- BRANCH C: Print / Export Itinerary -->
+  <path d="M200,1100 L200,1360" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+  <text x="208" y="1335" font-size="10" font-weight="700" fill="#059669">[🖨️ Print / Export]</text>
+
+  <!-- Action: Click Print / Export (Lane 1) -->
+  <g transform="translate(85, 1360)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="22" font-size="12" font-weight="600" fill="#0C4A6E" text-anchor="middle">Click "🖨️ Print / Export"</text>
+    <text x="115" y="38" font-size="10.5" fill="#64748B" text-anchor="middle">Toolbar Action Button</text>
+  </g>
+
+  <!-- Flow: Click Print -> Format Print Document (Lane 1 -> Lane 2) -->
+  <path d="M315,1383 L415,1383" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Format Print Layout (Lane 2) -->
+  <g transform="translate(415, 1360)">
+    <rect width="230" height="46" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#78350F" text-anchor="middle">printItinerary(): Render Print View</text>
+    <text x="115" y="35" font-size="10.5" fill="#64748B" text-anchor="middle">(Stops, Timing, Costs, Etiquette)</text>
+  </g>
+
+  <!-- Flow: Format -> Trigger Browser Print (Lane 2 -> Lane 1) -->
+  <path d="M530,1406 L530,1445 L200,1445 L200,1465" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Action: Trigger window.print() (Lane 1) -->
+  <g transform="translate(85, 1465)">
+    <rect width="230" height="44" rx="8" fill="#FFFFFF" stroke="#0284C7" stroke-width="1.5" filter="url(#nodeShadow)"/>
+    <text x="115" y="20" font-size="11.5" font-weight="600" fill="#0C4A6E" text-anchor="middle">Browser Print / PDF Dialog</text>
+    <text x="115" y="34" font-size="10.5" fill="#64748B" text-anchor="middle">Save PDF or Print Day Plan</text>
+  </g>
+
+  <!-- Flow to Final Node -->
+  <path d="M200,1509 L200,1535" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#flowArrow)"/>
+
+  <!-- Activity Final Node (Bullseye) in Lane 1 -->
+  <circle cx="200" cy="1547" r="13" fill="#FFFFFF" stroke="#0F172A" stroke-width="2"/>
+  <circle cx="200" cy="1547" r="8" fill="#0F172A"/>
+
+</svg>

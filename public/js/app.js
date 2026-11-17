@@ -55,9 +55,9 @@ async function initApp() {
   }
 }
 
-// ==========================================================================
+
 // DATA FETCHING (API with static fallback)
-// ==========================================================================
+
 async function fetchAttractions() {
   try {
     const res = await fetch('/api/attractions');
@@ -74,9 +74,9 @@ async function fetchAttractions() {
   APP_STATE.filteredAttractions = [...APP_STATE.attractions];
 }
 
-// ==========================================================================
-// LANDING PAGE LOGIC (Screenshots 1 & 2)
-// ==========================================================================
+
+// LANDING PAGE LOGIC
+
 function initLandingPage() {
   initUserAuth();
   setupFilterListeners();
